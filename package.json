@@ -1,0 +1,24 @@
+{
+  "name": "com.homelessskin.integration",
+  "displayName": "Integration",
+  "version": "1.0.0",
+  "description": "integration",
+  "author": {
+    "name": "RU_1n",
+    "email": "your@email.com"
+  },
+  "keywords": [
+    "integration"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/homelessskin/shared-integration.git"
+  },
+  "hideInEditor": false,
+  "dependencies": {
+    "com.homelessskin.core": "1.0.0",
+    "com.homelessskin.input": "1.0.0",
+    "com.homelessskin.ui": "1.0.0",
+    "websocket-sharp": "1.0.0"
+  }
+}
