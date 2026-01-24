@@ -128,13 +128,13 @@ namespace Integration
 
             Socket.Connect();
         }
-        protected void OnClose(object sender, CloseEventArgs e) => Manager.Log(this.GetType().FullName, $"{e.Reason} {e.Code} {Type}_Close", Core.LogLevel.Error);
-        protected void OnError(object sender, ErrorEventArgs e) => Manager.Log(this.GetType().FullName, $"{e.Message} {Type}_Error", Core.LogLevel.Error);
+        protected void OnClose(object sender, CloseEventArgs e) => Log.Error(this.GetType().FullName, $"{e.Reason} {e.Code} {Type}_Close");
+        protected void OnError(object sender, ErrorEventArgs e) => Log.Error(this.GetType().FullName, $"{e.Message} {Type}_Error");
         protected bool VerifyToken()
         {
             if (string.IsNullOrEmpty(Token))
             {
-                Manager.Log(this.GetType().FullName, $"Platform {Data.Name} doesn't have User Token!", Core.LogLevel.Warning);
+                Log.Warning(this.GetType().FullName, $"Platform {Data.Name} doesn't have User Token!");
 
                 return false;
             }

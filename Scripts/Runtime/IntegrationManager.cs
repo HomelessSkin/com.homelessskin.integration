@@ -12,19 +12,17 @@ namespace Integration
         float T;
 
         [Space]
-        [SerializeField] UnityEvent<Message> OnMessage;
-        [SerializeField] UnityEvent<Event> OnEvent;
+        [SerializeField] UnityEvent<SocketEvent> OnEvent;
+
+        [Space]
+        [SerializeField] PlatformAdapter TwitchAdapter;
+        [SerializeField] PlatformAdapter VKAdapter;
     }
 
     [Serializable]
-    public class Message
+    public class SocketEvent
     {
-
-    }
-
-    [Serializable]
-    public class Event
-    {
-
+        public string Nick;
+        public string Text;
     }
 }

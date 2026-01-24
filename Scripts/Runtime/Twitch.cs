@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
+using Core;
+
 using Integration.JSON;
 
 using UnityEngine;
@@ -113,13 +115,13 @@ namespace Integration
 
                 if (request.result == UnityWebRequest.Result.Success)
                 {
-                    Manager.Log(this.GetType().FullName, $"Subscribed successfully to: {type} event");
+                    Log.Info(this.GetType().FullName, $"Subscribed successfully to: {type} event");
 
                     return true;
                 }
                 else
                 {
-                    Manager.Log(this.GetType().FullName, $"Failed to create subscription to: {type} event. With error: {request.error}", Core.LogLevel.Error);
+                    Log.Error(this.GetType().FullName, $"Failed to create subscription to: {type} event. With error: {request.error}");
 
                     return false;
                 }
@@ -270,7 +272,7 @@ namespace Integration
                         }
                     }
                     else
-                        Manager.Log(this.GetType().FullName, request.error, Core.LogLevel.Error);
+                        Log.Error(this.GetType().FullName, request.error);
                 }
             }
             async Task RefreshSubSet()
@@ -303,7 +305,7 @@ namespace Integration
                         }
                     }
                     else
-                        Manager.Log(this.GetType().FullName, request.error, Core.LogLevel.Error);
+                        Log.Error(this.GetType().FullName, request.error);
                 }
             }
 

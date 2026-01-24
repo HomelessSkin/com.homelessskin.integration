@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
+using Core;
+
 using Integration.JSON;
 
 using UnityEngine;
@@ -29,10 +31,10 @@ namespace Integration
         protected static string EntryPath = "https://apidev.live.vkvideo.ru";
         protected static string SocketURL = "wss://pubsub-dev.live.vkvideo.ru/connection/websocket?format=json&cf_protocol_version=v2";
         protected static string[] Colors = new string[]
-            {
+        {
             "d66e34", "b8aaff", "1d90ff", "9961f9", "59a840", "e73629", "de6489", "20bba1",
             "f8b301", "0099bb", "7bbeff", "e542ff", "a36c59", "8ba259", "00a9ff", "a20bff"
-            };
+        };
 
         protected Queue<SocketMessage> Responses = new Queue<SocketMessage>();
 
@@ -63,7 +65,7 @@ namespace Integration
                     if (request.result == UnityWebRequest.Result.Success)
                         Data.ChannelID = JsonUtility.FromJson<JWT>(request.downloadHandler.text).data.token;
                     else
-                        Manager.Log(this.GetType().FullName, $"{request.error} {Type}_Connect", Core.LogLevel.Error);
+                        Log.Error(this.GetType().FullName, $"{request.error} {Type}_Connect");
                 }
 
                 InitializeSocket(SocketURL);
@@ -114,14 +116,14 @@ namespace Integration
                         break;
                     }
 
-                    Manager.Log(this.GetType().FullName, $"Send subscription to channel: {message.subscribe.channel} {Type}_Sub");
+                    Log.Info(this.GetType().FullName, $"Send subscription to channel: {message.subscribe.channel} {Type}_Sub");
                     Socket.Send(JsonUtility.ToJson(message));
 
                     return true;
                 }
                 else
                 {
-                    Manager.Log(this.GetType().FullName, $"{request.error} {Type}_Sub", Core.LogLevel.Error);
+                    Log.Error(this.GetType().FullName, $"{request.error} {Type}_Sub");
 
                     return false;
                 }
@@ -152,7 +154,7 @@ namespace Integration
 
         protected virtual async Task TechMessage(SocketMessage message)
         {
-            Manager.Log(this.GetType().FullName, $"{(MessageType)message.id} {Type}_{Data.Name}_SocketMsg");
+            Log.Info(this.GetType().FullName, $"{(MessageType)message.id} {Type}_{Data.Name}_SocketMsg");
             switch ((MessageType)message.id)
             {
                 case MessageType.Connection:
