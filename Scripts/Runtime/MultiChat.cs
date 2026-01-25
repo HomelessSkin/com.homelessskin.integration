@@ -14,8 +14,6 @@ namespace Integration
 {
     public class MultiChatManager : UIManagerBase
     {
-        internal static bool DebugSocket;
-
         #region DRAWER
         protected override void RedrawTheme(IStorage.Data storage)
         {
@@ -52,7 +50,6 @@ namespace Integration
         #endregion
 
         [Space]
-        [SerializeField] bool DebugSocketMessages;
         [SerializeField] float RefreshPeriod = 2f;
         [Space]
         [SerializeField] string[] VKScopes;
@@ -160,10 +157,8 @@ namespace Integration
             switch (_PlatformCreation.Switch.GetValue())
             {
                 case 0:
-                platform = CreateVK(_PlatformCreation.NameInput.text, _PlatformCreation.ChannelInput.text);
                 break;
                 case 1:
-                platform = CreateTwitch(_PlatformCreation.NameInput.text, _PlatformCreation.ChannelInput.text);
                 break;
             }
 
@@ -195,14 +190,11 @@ namespace Integration
             public override void AddData(string serialized, string path, bool fromResources = false, UIManagerBase manager = null)
             {
                 var data = JsonUtility.FromJson<Platform.PlatformData>(serialized);
-                Platform platform = null;
                 switch (data.Type)
                 {
                     case "vk":
-                    platform = (manager as MultiChatManager).CreateVK(data);
                     break;
                     case "twitch":
-                    platform = (manager as MultiChatManager).CreateTwitch(data);
                     break;
                 }
 
@@ -218,11 +210,6 @@ namespace Integration
 
             _Platforms.Close();
         }
-
-        internal virtual Platform CreateVK(string name, string channel) => new VK(name, channel, _Authentication.GetToken("vk"));
-        internal virtual Platform CreateVK(Platform.PlatformData data) => new VK(data, _Authentication.GetToken("vk"));
-        internal virtual Platform CreateTwitch(string name, string channel) => new Twitch(name, channel, _Authentication.GetToken("twitch"));
-        internal virtual Platform CreateTwitch(Platform.PlatformData data) => new Twitch(data, _Authentication.GetToken("twitch"));
 
         internal bool AllWorking()
         {
@@ -245,10 +232,8 @@ namespace Integration
                 switch (data.Type)
                 {
                     case "vk":
-                    _Platforms.List.Add(CreateVK(data));
                     break;
                     case "twitch":
-                    _Platforms.List.Add(CreateTwitch(data));
                     break;
                 }
             }
@@ -449,16 +434,6 @@ namespace Integration
 
             }
         }
-        protected override void OnDestroy()
-        {
-            base.OnDestroy();
-
-            for (int p = 0; p < _Platforms.List.Count; p++)
-            {
-                var platform = _Platforms.List[p];
-                platform.Disconnect();
-            }
-        }
 
 #if UNITY_EDITOR
         public override void OnValidate()
@@ -467,8 +442,6 @@ namespace Integration
 
             _Authentication.Manager = this;
             _Platforms.Manager = this;
-
-            DebugSocket = DebugSocketMessages;
         }
 #endif
     }

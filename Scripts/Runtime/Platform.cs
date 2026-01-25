@@ -21,9 +21,6 @@ namespace Integration
             get => Data.Enabled;
             set
             {
-                if (!Socket.IsAlive)
-                    Connect();
-
                 Data.Enabled = value;
             }
         }
@@ -38,44 +35,10 @@ namespace Integration
 
         protected Queue<MC_Message> MC_Messages = new Queue<MC_Message>();
 
-        internal Platform(string name, string channel, string token)
-        {
-            Manager = GameObject
-                .FindGameObjectWithTag("UIManager")
-                .GetComponent<MultiChatManager>();
-
-            Token = token;
-
-            Data = new PlatformData
-            {
-                Enabled = true,
-
-                Name = name,
-                Channel = channel,
-            };
-        }
-        internal Platform(PlatformData data, string token)
-        {
-            Manager = GameObject
-                .FindGameObjectWithTag("UIManager")
-                .GetComponent<MultiChatManager>();
-
-            Token = token;
-            Data = data;
-        }
-
-        protected abstract void Connect();
-        protected abstract void OnOpen(object sender, EventArgs e);
-        protected abstract void OnMessage(object sender, MessageEventArgs e);
         protected abstract Task<bool> SubscribeToEvent(string type);
         protected abstract Task ProcessSocketMessages();
 
         internal Task Refresh() => ProcessSocketMessages();
-        internal void Disconnect()
-        {
-            if (Socket != null && Socket.IsAlive)
-                Socket.Close();
-        }
         internal bool GetMessage(out MC_Message message) => MC_Messages.TryDequeue(out message);
 
         protected async void EnqueueMessage(MC_Message message)
@@ -112,24 +75,6 @@ namespace Integration
 
             MC_Messages.Enqueue(message);
         }
-        protected void InitializeSocket(string url)
-        {
-            if (Socket != null)
-                Socket.Close();
-
-            Socket = new WebSocket(url);
-            Socket.SslConfiguration.EnabledSslProtocols = System.Security.Authentication.SslProtocols.Tls12;
-            Socket.SslConfiguration.ServerCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
-
-            Socket.OnOpen += OnOpen;
-            Socket.OnMessage += OnMessage;
-            Socket.OnClose += OnClose;
-            Socket.OnError += OnError;
-
-            Socket.Connect();
-        }
-        protected void OnClose(object sender, CloseEventArgs e) => Log.Error(this.GetType().FullName, $"{e.Reason} {e.Code} {Type}_Close");
-        protected void OnError(object sender, ErrorEventArgs e) => Log.Error(this.GetType().FullName, $"{e.Message} {Type}_Error");
         protected bool VerifyToken()
         {
             if (string.IsNullOrEmpty(Token))

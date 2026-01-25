@@ -38,57 +38,6 @@ namespace Integration
 
         protected Queue<SocketMessage> Responses = new Queue<SocketMessage>();
 
-        internal VK(string name, string channel, string token) : base(name, channel, token)
-        {
-            Data.Type = "vk";
-
-            Connect();
-        }
-        internal VK(PlatformData data, string token) : base(data, token)
-        {
-            Connect();
-        }
-
-        protected override async void Connect()
-        {
-            if (!VerifyToken())
-                return;
-
-            if (Data.Enabled)
-            {
-                using (var request = UnityWebRequest.Get(EntryPath + "/v1/websocket/token"))
-                {
-                    request.SetRequestHeader("Authorization", $"Bearer {Token}");
-
-                    await request.SendWebRequest();
-
-                    if (request.result == UnityWebRequest.Result.Success)
-                        Data.ChannelID = JsonUtility.FromJson<JWT>(request.downloadHandler.text).data.token;
-                    else
-                        Log.Error(this.GetType().FullName, $"{request.error} {Type}_Connect");
-                }
-
-                InitializeSocket(SocketURL);
-            }
-        }
-        protected override void OnOpen(object sender, EventArgs e)
-        {
-            Socket.Send(JsonUtility.ToJson(new ConnectMessage
-            {
-                id = (uint)MessageType.Connection,
-                connect = new Connect
-                {
-                    token = Data.ChannelID
-                }
-            }));
-        }
-        protected override void OnMessage(object sender, MessageEventArgs e)
-        {
-            if (MultiChatManager.DebugSocket)
-                Debug.Log(e.Data);
-
-            Responses.Enqueue(JsonUtility.FromJson<SocketMessage>(e.Data));
-        }
         protected override async Task<bool> SubscribeToEvent(string type)
         {
             if (!VerifyToken())
@@ -154,7 +103,7 @@ namespace Integration
 
         protected virtual async Task TechMessage(SocketMessage message)
         {
-            Log.Info(this.GetType().FullName, $"{(MessageType)message.id} {Type}_{Data.Name}_SocketMsg");
+            Log.Info(this.GetType().FullName, $"{(MessageType)message.id}");
             switch ((MessageType)message.id)
             {
                 case MessageType.Connection:

@@ -67,6 +67,7 @@ namespace Integration.JSON
     [Serializable]
     public class SocketMessage
     {
+        public int platform;
         public uint id;
         public Push push;
         public Metadata metadata;

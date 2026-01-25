@@ -34,53 +34,6 @@ namespace Integration
 
         protected Queue<SocketMessage> Responses = new Queue<SocketMessage>();
 
-        internal Twitch(string name, string channel, string token) : base(name, channel, token)
-        {
-            Data.Type = "twitch";
-
-            Connect();
-        }
-        internal Twitch(PlatformData data, string token) : base(data, token)
-        {
-            Connect();
-        }
-
-        protected override async void Connect()
-        {
-            if (!VerifyToken())
-                return;
-
-            if (Data.Enabled)
-            {
-                using (var request = UnityWebRequest.Get(GetUsersURL + $"?login={Data.Channel}"))
-                {
-                    request.SetRequestHeader("Authorization", $"Bearer {Token}");
-                    request.SetRequestHeader("Client-ID", AppID);
-
-                    var oper = request.SendWebRequest();
-                    while (!oper.isDone)
-                        await Task.Yield();
-
-                    if (request.result == UnityWebRequest.Result.Success)
-                        Data.ChannelID = JsonUtility
-                            .FromJson<UserResponse>(request.downloadHandler.text)
-                            .data[0]
-                            .id;
-                }
-
-                InitializeSocket(SocketURL);
-            }
-        }
-        protected override void OnOpen(object sender, EventArgs e)
-        {
-        }
-        protected override void OnMessage(object sender, MessageEventArgs e)
-        {
-            if (MultiChatManager.DebugSocket)
-                Debug.Log(e.Data);
-
-            Responses.Enqueue(JsonUtility.FromJson<SocketMessage>(e.Data));
-        }
         protected override async Task<bool> SubscribeToEvent(string type)
         {
             if (!VerifyToken())
