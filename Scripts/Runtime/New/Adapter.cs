@@ -6,43 +6,25 @@ using Core;
 
 using Integration.JSON;
 
+using UI;
+
 using UnityEngine;
 
 using WebSocketSharp;
 
 namespace Integration2
 {
-    public abstract class Adapter : IStorage
+    [Serializable]
+    public class Adapter : Storage
     {
-        public int _MaxSaveFiles => 1;
-        public string _DataFile => "*.json";
-        public string _ResourcesPath => "";
-        public string _PersistentPath => Processor.PersistentPath;
+        [Space]
+        [SerializeField] Processor Processor;
 
-        Processor Processor;
         Platform Platform;
 
         protected Queue<SocketMessage> SocketMessages = new Queue<SocketMessage>();
 
-        public Adapter(Processor processor, string name, string channel, string token)
-        {
-            Processor = processor;
-            Platform = new Platform
-            {
-                Name = name,
-
-                Enabled = true,
-                ProcessorID = processor.ID,
-                Token = token,
-                Channel = channel,
-            };
-        }
-        public Adapter(Processor processor, Platform platform)
-        {
-            Processor = processor;
-            Platform = platform;
-        }
-
+        #region old
         //protected async void EnqueueMessage(SocketMessage message)
         //{
         //    await Task.Delay(0);
@@ -78,23 +60,41 @@ namespace Integration2
 
         //    //SocketMessages.Enqueue(message);
         //}
-        //protected bool VerifyToken()
-        //{
-        //    //if (string.IsNullOrEmpty(Token))
-        //    //{
-        //    //    Log.Warning(this.GetType().FullName, $"Platform {Data.Name} doesn't have User Token!");
+        #endregion
 
-        //    //    return false;
-        //    //}
+        public void Load()
+        {
+            var platform = Load(Processor.name);
+            if (string.IsNullOrEmpty(platform))
+                return;
 
-        //    return true;
-        //}
+            Platform = JsonUtility.FromJson<Platform>(platform);
+        }
+        public void Reset(string name, string channel, string token)
+        {
+            Platform = new Platform
+            {
+                Name = name,
 
+                Enabled = true,
+                Token = token,
+                Channel = channel,
+            };
+        }
         public async Task Connect()
         {
+            if (!VerifyToken())
+                return;
+
             Platform.ChannelID = await Processor.Connect(Platform);
             if (!string.IsNullOrEmpty(Platform.ChannelID))
-                InitializeSocket(Processor.SocketURL);
+                InitializeSocket(Processor.GetSocketURL());
+        }
+        public void IsAlive()
+        {
+            if (Platform != null &&
+                 Platform.Socket != null)
+                Log.Warning(this, $"{Platform.Name}'s Connection is: {Platform.Socket.IsAlive}");
         }
         public void Disconnect()
         {
@@ -102,11 +102,21 @@ namespace Integration2
                  Platform.Socket.IsAlive)
                 Platform.Socket.Close();
         }
-        protected abstract Task<bool> SubscribeToEvent(string type);
-        public bool GetMessage(out SocketMessage message) => SocketMessages.TryDequeue(out message);
+        public void OnPing() => Processor.OnPing(Platform);
+        public void SubscribeToEvents(Session session)
+        {
+            if (session != null)
+                Platform.SessionID = session.id;
+
+            Processor.SubscribeToEvents(Platform);
+        }
+        public void DetermineType(ref SocketMessage message) => Processor.DetermineType(ref message);
+        public bool TryGetMessage(out SocketMessage message) => SocketMessages.TryDequeue(out message);
 
         void InitializeSocket(string url)
         {
+            Log.Info(this, $"{Platform.Name} Socket Initialization.");
+
             if (Platform.Socket != null)
                 Platform.Socket.Close();
 
@@ -121,19 +131,22 @@ namespace Integration2
 
             Platform.Socket.Connect();
         }
-        void OnOpen(object sender, EventArgs e)
-        {
-            Processor.OnOpen(Platform);
-        }
-        void OnMessage(object sender, MessageEventArgs e)
-        {
-            var message = JsonUtility.FromJson<SocketMessage>(e.Data);
-            message.platform = Processor.ID;
+        void OnOpen(object sender, EventArgs e) => Processor.OnOpen(Platform);
+        void OnMessage(object sender, MessageEventArgs e) => SocketMessages.Enqueue(JsonUtility.FromJson<SocketMessage>(e.Data));
+        void OnClose(object sender, CloseEventArgs e) => Log.Warning(this, $"{e.Reason} {e.Code}");
+        void OnError(object sender, ErrorEventArgs e) => Log.Error(this, $"{e.Message}");
 
-            SocketMessages.Enqueue(message);
+        bool VerifyToken()
+        {
+            if (string.IsNullOrEmpty(Platform.Token))
+            {
+                Log.Warning(this, $"Platform {Processor.name} doesn't have a User Token!");
+
+                return false;
+            }
+
+            return true;
         }
-        void OnClose(object sender, CloseEventArgs e) => Log.Error(this.GetType().FullName, $"{e.Reason} {e.Code}");
-        void OnError(object sender, ErrorEventArgs e) => Log.Error(this.GetType().FullName, $"{e.Message}");
     }
 
     #region PLATFORM
@@ -144,7 +157,6 @@ namespace Integration2
         [NonSerialized] public string SessionID;
         [NonSerialized] public WebSocket Socket;
 
-        public int ProcessorID;
         public bool Enabled;
         public string Token;
         public string Channel;

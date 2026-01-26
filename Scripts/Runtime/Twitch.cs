@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -8,8 +7,6 @@ using Integration.JSON;
 
 using UnityEngine;
 using UnityEngine.Networking;
-
-using WebSocketSharp;
 
 namespace Integration
 {
@@ -27,90 +24,10 @@ namespace Integration
 
         protected static string AppID = "6ss2l29z27gl1rmz061rajdhd9mgr6";
         protected static string AuthPath = "https://id.twitch.tv/oauth2/authorize";
-        protected static string SocketURL = "wss://eventsub.wss.twitch.tv/ws";
-        protected static string EventSubURL = "https://api.twitch.tv/helix/eventsub/subscriptions";
-        protected static string GetUsersURL = "https://api.twitch.tv/helix/users";
         protected static string EmoteURL = "https://static-cdn.jtvnw.net/emoticons/v2";
 
         protected Queue<SocketMessage> Responses = new Queue<SocketMessage>();
 
-        protected override async Task<bool> SubscribeToEvent(string type)
-        {
-            if (!VerifyToken())
-                return false;
-
-            var data = JsonUtility.ToJson(new EventSubRequest
-            {
-                type = type,
-                version = "1",
-                condition = new Condition
-                {
-                    broadcaster_user_id = Data.ChannelID,
-                    user_id = Data.ChannelID,
-                },
-                transport = new Transport
-                {
-                    method = "websocket",
-                    session_id = $"{Data.SessionID}",
-                },
-            });
-
-            using (var request = UnityWebRequest.Post(EventSubURL, "", "application/json"))
-            {
-                request.SetRequestHeader("Authorization", $"Bearer {Token}");
-                request.SetRequestHeader("Client-Id", AppID);
-
-                var bodyRaw = System.Text.Encoding.UTF8.GetBytes(data);
-                request.uploadHandler = new UploadHandlerRaw(bodyRaw);
-                request.downloadHandler = new DownloadHandlerBuffer();
-
-                await request.SendWebRequest();
-
-                if (request.result == UnityWebRequest.Result.Success)
-                {
-                    Log.Info(this.GetType().FullName, $"Subscribed successfully to: {type} event");
-
-                    return true;
-                }
-                else
-                {
-                    Log.Error(this.GetType().FullName, $"Failed to create subscription to: {type} event. With error: {request.error}");
-
-                    return false;
-                }
-            }
-        }
-        protected override async Task ProcessSocketMessages()
-        {
-            while (Responses.Count > 0)
-            {
-                var message = Responses.Dequeue();
-                switch (message.metadata.message_type)
-                {
-                    case "session_keepalive":
-                    KeepAlive();
-                    break;
-                    case "session_welcome":
-                    IsWorking = await SessionWelcome(message);
-                    break;
-                    case "notification":
-                    await Notification(message);
-                    break;
-                }
-            }
-        }
-
-        protected virtual void KeepAlive() { }
-        protected virtual async Task<bool> SessionWelcome(SocketMessage message)
-        {
-            Data.SessionID = message.payload.session.id;
-
-            var result = true;
-            result &= await SubscribeToEvent("channel.chat.message");
-            result &= await SubscribeToEvent("channel.chat.message_delete");
-
-            return result;
-        }
         protected virtual async Task Notification(SocketMessage message)
         {
             switch (message.metadata.subscription_type)
@@ -198,9 +115,6 @@ namespace Integration
 
             async Task RefreshGlobalSet()
             {
-                if (!VerifyToken())
-                    return;
-
                 using (var request = UnityWebRequest.Get($"https://api.twitch.tv/helix/chat/badges" + "/global"))
                 {
                     request.SetRequestHeader("Authorization", $"Bearer {Token}");
@@ -225,14 +139,11 @@ namespace Integration
                         }
                     }
                     else
-                        Log.Error(this.GetType().FullName, request.error);
+                        Log.Error(this, request.error);
                 }
             }
             async Task RefreshSubSet()
             {
-                if (!VerifyToken())
-                    return;
-
                 using (var request = UnityWebRequest.Get($"https://api.twitch.tv/helix/chat/badges" +
                     $"?broadcaster_id={Data.ChannelID}"))
                 {
@@ -258,7 +169,7 @@ namespace Integration
                         }
                     }
                     else
-                        Log.Error(this.GetType().FullName, request.error);
+                        Log.Error(this, request.error);
                 }
             }
 

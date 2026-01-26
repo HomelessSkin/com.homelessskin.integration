@@ -1,4 +1,4 @@
-using System;
+using Core;
 
 using Integration.JSON;
 
@@ -9,16 +9,51 @@ namespace Integration2
 {
     public class IntegrationManager : MonoBehaviour
     {
-        [SerializeField] float RefreshPeriod = 2f;
+        [Space]
+        [SerializeField] Adapter VKAdapter;
 
-        float T;
+        [Space]
+        [SerializeField] Adapter TwitchAdapter;
 
         [Space]
         [SerializeField] UnityEvent<SocketMessage>[] Events;
 
-        [Space]
-        [SerializeField] Processor[] Processors;
+        void Start()
+        {
+            StartAdapter(VKAdapter);
+            StartAdapter(TwitchAdapter);
+        }
+        void Update()
+        {
+            UpdateAdapter(VKAdapter);
+            UpdateAdapter(TwitchAdapter);
+        }
 
-        Adapter[] Adapters;
+        async void StartAdapter(Adapter adapter)
+        {
+            adapter.Load();
+            await adapter.Connect();
+        }
+        void UpdateAdapter(Adapter adapter)
+        {
+            while (adapter.TryGetMessage(out var message))
+            {
+                adapter.DetermineType(ref message);
+
+                Log.Info(adapter, $"{message.type} message received.");
+
+                switch (message.type)
+                {
+                    case "session_keepalive":
+                    adapter.OnPing();
+                    break;
+                    case "session_welcome":
+                    adapter.SubscribeToEvents(message.payload.session);
+                    break;
+                    default:
+                    break;
+                }
+            }
+        }
     }
 }

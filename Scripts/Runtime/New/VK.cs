@@ -14,38 +14,77 @@ namespace Integration2
     {
         protected static string EntryPath = "https://apidev.live.vkvideo.ru";
 
-        public override async Task<string> Connect(Platform data)
+        public override async Task<string> Connect(Platform platform)
         {
             using (var request = UnityWebRequest.Get(EntryPath + "/v1/websocket/token"))
             {
-                request.SetRequestHeader("Authorization", $"Bearer {data.Token}");
+                request.SetRequestHeader("Authorization", $"Bearer {platform.Token}");
 
                 await request.SendWebRequest();
 
                 if (request.result == UnityWebRequest.Result.Success)
                     return JsonUtility.FromJson<JWT>(request.downloadHandler.text).data.token;
                 else
-                    Log.Error(this.GetType().FullName, $"{request.error}");
+                    Log.Error(this, $"{request.error}");
             }
 
             return "";
         }
-        public override void OnOpen(Platform data)
+        public override void OnOpen(Platform platform)
         {
-            data.Socket.Send(JsonUtility.ToJson(new ConnectMessage
+            platform.Socket.Send(JsonUtility.ToJson(new ConnectMessage
             {
-                id = (uint)MessageType.Connection,
+                id = 792420933u,
                 connect = new Connect
                 {
-                    token = data.ChannelID
+                    token = platform.ChannelID
                 }
             }));
         }
-
-        protected enum MessageType : uint
+        public override void OnPing(Platform platform) => platform.Socket.Send("{}");
+        public override void DetermineType(ref SocketMessage message)
         {
-            Connection = 1u,
-            ChatSub = 2u,
+            if (message.id != 0u)
+                message.type = IDToType(message.id);
+            else if (message.push == null || message.push.pub == null)
+                message.type = "session_keepalive";
+            else
+                message.type = message.push.pub.data.type;
+        }
+
+        protected override async void SubscribeToEvent(string type, Platform platform)
+        {
+            using (var request = UnityWebRequest.Get(EntryPath +
+                $"/v1/channel" +
+                $"?channel_url={platform.Channel.ToLower()}"))
+            {
+                request.SetRequestHeader("Authorization", $"Bearer {platform.Token}");
+                request.downloadHandler = new DownloadHandlerBuffer();
+
+                await request.SendWebRequest();
+
+                if (request.result == UnityWebRequest.Result.Success)
+                {
+                    var channel = JsonUtility.FromJson<ChannelsResponse>(request.downloadHandler.text).data.channel;
+
+                    var message = new SubMessage
+                    {
+                        id = "sub".ToUint(),
+                    };
+
+                    switch (type)
+                    {
+                        case "chat":
+                        message.subscribe = new Sub { channel = $"{channel.web_socket_channels.chat}" };
+                        break;
+                    }
+
+                    Log.Info(this, $"Sending subscription to channel: {message.subscribe.channel}");
+                    platform.Socket.Send(JsonUtility.ToJson(message));
+                }
+                else
+                    Log.Error(this, $"{request.error}");
+            }
         }
     }
 }

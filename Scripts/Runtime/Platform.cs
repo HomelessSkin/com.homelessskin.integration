@@ -1,44 +1,19 @@
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 
 using Core;
-
-using UnityEngine;
-
-using WebSocketSharp;
 
 namespace Integration
 {
     public abstract class Platform
     {
         protected static string RedirectPath = "https://oauth.vk.com/blank.html";
-
-        public PlatformData Data;
-
-        internal bool Enabled
-        {
-            get => Data.Enabled;
-            set
-            {
-                Data.Enabled = value;
-            }
-        }
-        internal bool IsWorking;
-        internal string Type { get => Data.Type; }
-        internal string Channel { get => Data.Channel; }
-
         protected string Token = "";
 
-        protected WebSocket Socket;
+        public PlatformData Data;
         protected MultiChatManager Manager;
-
         protected Queue<MC_Message> MC_Messages = new Queue<MC_Message>();
 
-        protected abstract Task<bool> SubscribeToEvent(string type);
-        protected abstract Task ProcessSocketMessages();
-
-        internal Task Refresh() => ProcessSocketMessages();
         internal bool GetMessage(out MC_Message message) => MC_Messages.TryDequeue(out message);
 
         protected async void EnqueueMessage(MC_Message message)
@@ -74,17 +49,6 @@ namespace Integration
                 }
 
             MC_Messages.Enqueue(message);
-        }
-        protected bool VerifyToken()
-        {
-            if (string.IsNullOrEmpty(Token))
-            {
-                Log.Warning(this.GetType().FullName, $"Platform {Data.Name} doesn't have User Token!");
-
-                return false;
-            }
-
-            return true;
         }
 
         #region DATA

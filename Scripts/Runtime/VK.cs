@@ -28,8 +28,6 @@ namespace Integration
 
         protected static string AppID = "p61uibtoabrmz18v";
         protected static string AuthPath = "https://auth.live.vkvideo.ru/app/oauth2/authorize";
-        protected static string EntryPath = "https://apidev.live.vkvideo.ru";
-        protected static string SocketURL = "wss://pubsub-dev.live.vkvideo.ru/connection/websocket?format=json&cf_protocol_version=v2";
         protected static string[] Colors = new string[]
         {
             "d66e34", "b8aaff", "1d90ff", "9961f9", "59a840", "e73629", "de6489", "20bba1",
@@ -38,90 +36,6 @@ namespace Integration
 
         protected Queue<SocketMessage> Responses = new Queue<SocketMessage>();
 
-        protected override async Task<bool> SubscribeToEvent(string type)
-        {
-            if (!VerifyToken())
-                return false;
-
-            using (var request = UnityWebRequest.Get(EntryPath +
-                $"/v1/channel" +
-                $"?channel_url={Channel.ToLower()}"))
-            {
-                request.SetRequestHeader("Authorization", $"Bearer {Token}");
-                request.downloadHandler = new DownloadHandlerBuffer();
-
-                await request.SendWebRequest();
-
-                if (request.result == UnityWebRequest.Result.Success)
-                {
-                    var channel = JsonUtility.FromJson<ChannelsResponse>(request.downloadHandler.text).data.channel;
-
-                    var message = new SubMessage { };
-                    switch (type)
-                    {
-                        case "chat":
-                        message.id = (uint)MessageType.ChatSub;
-                        message.subscribe = new Sub { channel = $"{channel.web_socket_channels.chat}" };
-                        break;
-                    }
-
-                    Log.Info(this.GetType().FullName, $"Send subscription to channel: {message.subscribe.channel} {Type}_Sub");
-                    Socket.Send(JsonUtility.ToJson(message));
-
-                    return true;
-                }
-                else
-                {
-                    Log.Error(this.GetType().FullName, $"{request.error} {Type}_Sub");
-
-                    return false;
-                }
-            }
-        }
-        protected override async Task ProcessSocketMessages()
-        {
-            while (Responses.Count > 0)
-            {
-                var message = Responses.Dequeue();
-                if (message.id != 0u)
-                {
-                    await TechMessage(message);
-
-                    continue;
-                }
-
-                if (message.push == null || message.push.pub == null)
-                {
-                    Ping();
-
-                    continue;
-                }
-
-                Notification(message);
-            }
-        }
-
-        protected virtual async Task TechMessage(SocketMessage message)
-        {
-            Log.Info(this.GetType().FullName, $"{(MessageType)message.id}");
-            switch ((MessageType)message.id)
-            {
-                case MessageType.Connection:
-                {
-                    await SubscribeToEvent("chat");
-                }
-                break;
-                case MessageType.ChatSub:
-                {
-
-                }
-                break;
-            }
-        }
-        protected virtual void Ping()
-        {
-            Socket.Send("{}");
-        }
         protected virtual void Notification(SocketMessage socket)
         {
             var data = socket.push.pub.data;
@@ -217,12 +131,6 @@ namespace Integration
             }
 
             return badges;
-        }
-
-        protected enum MessageType : uint
-        {
-            Connection = 1u,
-            ChatSub = 2u,
         }
     }
 }
