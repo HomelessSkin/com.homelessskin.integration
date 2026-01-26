@@ -6,7 +6,7 @@ using UI;
 
 using UnityEngine;
 
-namespace Integration
+namespace Integration2
 {
     public class ListPlatform : ScrollItem
     {
@@ -18,10 +18,10 @@ namespace Integration
         {
             base.Init(index, data, manager);
 
-            var platform = (Platform.PlatformData)data;
+            var platform = (Platform)data;
 
             Enabled.text = $"{platform.Enabled}";
-            Type.text = $"{platform.Type}";
+            Type.text = $"{platform.Name}";
             Channel.text = $"{platform.Channel}";
         }
     }

@@ -11,56 +11,51 @@ namespace Integration
         protected string Token = "";
 
         public PlatformData Data;
-        protected MultiChatManager Manager;
         protected Queue<MC_Message> MC_Messages = new Queue<MC_Message>();
 
         internal bool GetMessage(out MC_Message message) => MC_Messages.TryDequeue(out message);
 
-        protected async void EnqueueMessage(MC_Message message)
-        {
-            if (message.Parts != null)
-                for (int p = 0; p < message.Parts.Count; p++)
-                {
-                    var part = message.Parts[p];
+        //protected async void EnqueueMessage(MC_Message message)
+        //{
+        //    if (message.Parts != null)
+        //        for (int p = 0; p < message.Parts.Count; p++)
+        //        {
+        //            var part = message.Parts[p];
 
-                    if (!string.IsNullOrEmpty(part.Emote.URL))
-                    {
-                        var smile = await Web.DownloadSpriteTexture(part.Emote.URL);
-                        if (smile)
-                            Manager.DrawSmile(smile, part.Emote.Hash);
-                        else
-                            part.Emote.Hash = 0;
-                    }
+        //            if (!string.IsNullOrEmpty(part.Emote.URL))
+        //            {
+        //                var smile = await Web.DownloadSpriteTexture(part.Emote.URL);
+        //                if (smile)
+        //                    Manager.DrawSmile(smile, part.Emote.Hash);
+        //                else
+        //                    part.Emote.Hash = 0;
+        //            }
 
-                    message.Parts[p] = part;
-                }
+        //            message.Parts[p] = part;
+        //        }
 
-            if (message.Badges != null)
-                for (int b = 0; b < message.Badges.Count; b++)
-                {
-                    var part = message.Badges[b];
+        //    if (message.Badges != null)
+        //        for (int b = 0; b < message.Badges.Count; b++)
+        //        {
+        //            var part = message.Badges[b];
 
-                    if (!string.IsNullOrEmpty(part.URL))
-                    {
-                        var badge = await Web.DownloadSpriteTexture(part.URL);
-                        if (badge)
-                            Manager.DrawBadge(badge, part.Hash);
-                    }
-                }
+        //            if (!string.IsNullOrEmpty(part.URL))
+        //            {
+        //                var badge = await Web.DownloadSpriteTexture(part.URL);
+        //                if (badge)
+        //                    Manager.DrawBadge(badge, part.Hash);
+        //            }
+        //        }
 
-            MC_Messages.Enqueue(message);
-        }
+        //    MC_Messages.Enqueue(message);
+        //}
 
         #region DATA
         [Serializable]
         public class PlatformData : IStorage.Data
         {
-            public bool Enabled;
-
             public string ChannelID;
             public string Channel;
-
-            public string SessionID;
         }
         #endregion
     }
