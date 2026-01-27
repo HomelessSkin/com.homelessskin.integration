@@ -23,16 +23,11 @@ namespace Integration
             //        scope += $"{scopes[s]}%20";
 
             //Application.OpenURL($"{AuthPath}?response_type=token&client_id={AppID}&redirect_uri={RedirectPath}&{scope}");
-            Application.OpenURL($"{AuthPath}?client_id={AppID}&redirect_uri={RedirectPath}&response_type=token");
         }
 
         protected static string AppID = "p61uibtoabrmz18v";
         protected static string AuthPath = "https://auth.live.vkvideo.ru/app/oauth2/authorize";
-        protected static string[] Colors = new string[]
-        {
-            "d66e34", "b8aaff", "1d90ff", "9961f9", "59a840", "e73629", "de6489", "20bba1",
-            "f8b301", "0099bb", "7bbeff", "e542ff", "a36c59", "8ba259", "00a9ff", "a20bff"
-        };
+        
 
         //protected virtual void Notification(SocketMessage socket)
         //{

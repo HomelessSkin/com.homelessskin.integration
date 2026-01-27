@@ -7,14 +7,6 @@ namespace Integration
 {
     public abstract class Platform
     {
-        protected static string RedirectPath = "https://oauth.vk.com/blank.html";
-        protected string Token = "";
-
-        public PlatformData Data;
-        protected Queue<MC_Message> MC_Messages = new Queue<MC_Message>();
-
-        internal bool GetMessage(out MC_Message message) => MC_Messages.TryDequeue(out message);
-
         //protected async void EnqueueMessage(MC_Message message)
         //{
         //    if (message.Parts != null)
@@ -49,15 +41,6 @@ namespace Integration
 
         //    MC_Messages.Enqueue(message);
         //}
-
-        #region DATA
-        [Serializable]
-        public class PlatformData : IStorage.Data
-        {
-            public string ChannelID;
-            public string Channel;
-        }
-        #endregion
     }
 
     #region MESSAGE

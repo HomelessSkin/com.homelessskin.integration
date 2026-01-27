@@ -1,30 +1,21 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
-
-using Core;
-
-using Integration.JSON;
-
-using UnityEngine;
-using UnityEngine.Networking;
-
 namespace Integration
 {
     internal class Twitch : Platform
     {
         internal static void StartAuth(string[] scopes)
         {
-            var scope = "scope=";
-            if (scopes != null)
-                for (int s = 0; s < scopes.Length; s++)
-                    scope += $"{scopes[s]}" + (s == scopes.Length - 1 ? "" : "%20");
+            //var scope = "scope=";
+            //if (scopes != null)
+            //    for (int s = 0; s < scopes.Length; s++)
+            //        scope += $"{scopes[s]}" + (s == scopes.Length - 1 ? "" : "%20");
 
-            Application.OpenURL($"{AuthPath}?response_type=token&client_id={AppID}&redirect_uri={RedirectPath}&{scope}");
+            //Application.OpenURL($"{AuthPath}?response_type=token&client_id={AppID}&redirect_uri={RedirectPath}&{scope}");
         }
 
         protected static string AppID = "6ss2l29z27gl1rmz061rajdhd9mgr6";
         protected static string AuthPath = "https://id.twitch.tv/oauth2/authorize";
         protected static string EmoteURL = "https://static-cdn.jtvnw.net/emoticons/v2";
+        protected static string BadgesURL = $"https://api.twitch.tv/helix/chat/badges";
 
         //protected virtual async Task Notification(SocketMessage message)
         //{
@@ -113,7 +104,7 @@ namespace Integration
 
         //    async Task RefreshGlobalSet()
         //    {
-        //        using (var request = UnityWebRequest.Get($"https://api.twitch.tv/helix/chat/badges" + "/global"))
+        //        using (var request = UnityWebRequest.Get(BadgesURL + "/global"))
         //        {
         //            request.SetRequestHeader("Authorization", $"Bearer {Token}");
         //            request.SetRequestHeader("Client-ID", AppID);
@@ -142,8 +133,7 @@ namespace Integration
         //    }
         //    async Task RefreshSubSet()
         //    {
-        //        using (var request = UnityWebRequest.Get($"https://api.twitch.tv/helix/chat/badges" +
-        //            $"?broadcaster_id={Data.ChannelID}"))
+        //        using (var request = UnityWebRequest.Get(BadgesURL + $"?broadcaster_id={Data.ChannelID}"))
         //        {
         //            request.SetRequestHeader("Authorization", $"Bearer {Token}");
         //            request.SetRequestHeader("Client-ID", AppID);

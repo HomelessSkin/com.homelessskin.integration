@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Threading.Tasks;
 
 using Core;
@@ -7,6 +7,8 @@ using Core;
 using Integration.JSON;
 
 using UI;
+
+using Unity.Entities;
 
 using UnityEngine;
 
@@ -20,9 +22,10 @@ namespace Integration2
         [Space]
         [SerializeField] Processor Processor;
 
-        Platform Platform;
+        protected EntityManager EntityManager;
+        protected Platform Platform;
 
-        protected Queue<SocketMessage> SocketMessages = new Queue<SocketMessage>();
+        protected ConcurrentQueue<SocketMessage> SocketMessages = new ConcurrentQueue<SocketMessage>();
 
         #region old
         //protected async void EnqueueMessage(SocketMessage message)
@@ -64,6 +67,8 @@ namespace Integration2
 
         public void Load()
         {
+            EntityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
+
             var platform = Load(Processor.name);
             if (string.IsNullOrEmpty(platform))
                 return;
@@ -102,16 +107,29 @@ namespace Integration2
                  Platform.Socket.IsAlive)
                 Platform.Socket.Close();
         }
-        public void OnPing() => Processor.OnPing(Platform);
-        public void SubscribeToEvents(Session session)
+        public void Invoke()
         {
-            if (session != null)
-                Platform.SessionID = session.id;
+            while (SocketMessages.TryDequeue(out var message))
+            {
+                Processor.DetermineType(ref message);
 
-            Processor.SubscribeToEvents(Platform);
+                switch (message.type)
+                {
+                    case "session_keepalive":
+                    Processor.OnPing(Platform);
+                    break;
+                    case "session_welcome":
+                    if (message.payload.session != null)
+                        Platform.SessionID = message.payload.session.id;
+
+                    Processor.SubscribeToEvents(Platform);
+                    break;
+                    default:
+                    Processor.InvokeAsync(message, EntityManager);
+                    break;
+                }
+            }
         }
-        public void DetermineType(ref SocketMessage message) => Processor.DetermineType(ref message);
-        public bool TryGetMessage(out SocketMessage message) => SocketMessages.TryDequeue(out message);
 
         void InitializeSocket(string url)
         {

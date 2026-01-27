@@ -2,7 +2,11 @@ using System.Threading.Tasks;
 
 using Core;
 
+using Input;
+
 using Integration.JSON;
+
+using Unity.Entities;
 
 using UnityEngine;
 using UnityEngine.Networking;
@@ -13,6 +17,11 @@ namespace Integration2
     public class VK : Processor
     {
         protected static string EntryPath = "https://apidev.live.vkvideo.ru";
+        protected static string[] Colors = new string[]
+        {
+            "d66e34", "b8aaff", "1d90ff", "9961f9", "59a840", "e73629", "de6489", "20bba1",
+            "f8b301", "0099bb", "7bbeff", "e542ff", "a36c59", "8ba259", "00a9ff", "a20bff"
+        };
 
         public override async Task<string> Connect(Platform platform)
         {
@@ -50,6 +59,40 @@ namespace Integration2
                 message.type = "session_keepalive";
             else
                 message.type = message.push.pub.data.type;
+
+            base.DetermineType(ref message);
+        }
+        public override async void InvokeAsync(SocketMessage message, EntityManager manager)
+        {
+            var data = message.push.pub.data;
+            switch (data.type)
+            {
+                case "channel_chat_message_send":
+                var m = data.data.chat_message;
+                if (m.author.nick == "ChatBot")
+                    return;
+
+                Sys.Add_M(new IInteractable.Event
+                {
+                    Title = "Message",
+                    Platform = "vk",
+                    ID = m.id.ToString(),
+                    Nick = m.author.nick,
+                    NickColor = $"#{Colors[m.author.nick_color]}",
+                    UserInput = await ExtractText(message)
+                },
+                manager);
+                break;
+                case "channel_chat_message_delete":
+                Sys.Add_M(new IInteractable.Event
+                {
+                    Title = "DeleteMessage",
+                    Platform = "vk",
+                    ID = data.data.chat_message.id.ToString()
+                },
+                manager);
+                break;
+            }
         }
 
         protected override async void SubscribeToEvent(string type, Platform platform)
@@ -85,6 +128,11 @@ namespace Integration2
                 else
                     Log.Error(this, $"{request.error}");
             }
+        }
+        protected virtual async Task<string> ExtractText(SocketMessage message)
+        {
+            await Task.Delay(0);
+            return "";
         }
     }
 }

@@ -5,6 +5,9 @@ using Core;
 
 using Integration.JSON;
 
+using Unity.Entities;
+
+
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -15,6 +18,7 @@ namespace Integration2
 {
     public abstract class Processor : ScriptableObject
     {
+        [SerializeField] bool LogMessageTypes = true;
         [SerializeField] protected string AppID;
         [SerializeField] protected string SocketURL;
         [SerializeField] protected string RedirectURL = "https://oauth.vk.com/blank.html";
@@ -39,11 +43,16 @@ namespace Integration2
             for (int e = 0; e < Events.Length; e++)
                 SubscribeToEvent(Events[e], platform);
         }
+        public virtual void DetermineType(ref SocketMessage message)
+        {
+            if (LogMessageTypes)
+                Log.Info(this, $"{message.type} message received.");
+        }
 
         public abstract Task<string> Connect(Platform platform);
         public abstract void OnOpen(Platform platform);
         public abstract void OnPing(Platform platform);
-        public abstract void DetermineType(ref SocketMessage message);
+        public abstract void InvokeAsync(SocketMessage message, EntityManager manager);
 
         protected abstract void SubscribeToEvent(string type, Platform platform);
 
@@ -70,8 +79,8 @@ namespace Integration2
         [Serializable]
         public class MessageType
         {
-            public string Name;
             public uint ID;
+            public string Name;
         }
     }
 }
