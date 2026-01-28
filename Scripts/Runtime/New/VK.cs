@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 using Core;
@@ -58,11 +59,11 @@ namespace Integration2
             else if (message.push == null || message.push.pub == null)
                 message.type = "session_keepalive";
             else
-                message.type = message.push.pub.data.type;
+                message.type = "notification";
 
             base.DetermineType(ref message);
         }
-        public override async void InvokeAsync(SocketMessage message, EntityManager manager)
+        public override void Invoke(SocketMessage message, EntityManager manager)
         {
             var data = message.push.pub.data;
             switch (data.type)
@@ -72,22 +73,27 @@ namespace Integration2
                 if (m.author.nick == "ChatBot")
                     return;
 
-                Sys.Add_M(new IInteractable.Event
+                Sys.Add_M(new OuterInput
                 {
-                    Title = "Message",
                     Platform = "vk",
+
+                    Title = "Message",
                     ID = m.id.ToString(),
+
                     Nick = m.author.nick,
                     NickColor = $"#{Colors[m.author.nick_color]}",
-                    UserInput = await ExtractText(message)
+
+                    Badges = ExtractBadges(m.author),
+                    UserInput = ExtractChatMessage(data.data.chat_message),
                 },
                 manager);
                 break;
                 case "channel_chat_message_delete":
-                Sys.Add_M(new IInteractable.Event
+                Sys.Add_M(new OuterInput
                 {
-                    Title = "DeleteMessage",
                     Platform = "vk",
+
+                    Title = "Delete Message",
                     ID = data.data.chat_message.id.ToString()
                 },
                 manager);
@@ -112,7 +118,7 @@ namespace Integration2
 
                     var message = new SubMessage
                     {
-                        id = "sub".ToUint(),
+                        id = type.ToUint(),
                     };
 
                     switch (type)
@@ -129,10 +135,71 @@ namespace Integration2
                     Log.Error(this, $"{request.error}");
             }
         }
-        protected virtual async Task<string> ExtractText(SocketMessage message)
+        protected virtual List<OuterInput.Part> ExtractChatMessage(Message message)
         {
-            await Task.Delay(0);
-            return "";
+            var list = new List<OuterInput.Part>();
+            var tasks = new List<Task>();
+
+            for (int p = 0; p < message.parts.Count; p++)
+            {
+                var part = message.parts[p];
+                var ep = new OuterInput.Part { };
+
+                if (part.text != null)
+                    ep.Message = new OuterInput.Part.Text
+                    {
+                        Content = part.text.content
+                    };
+                if (part.smile != null && !string.IsNullOrEmpty(part.smile.medium_url))
+                    ep.Emote = new OuterInput.Part.Smile
+                    {
+                        Hash = part.smile.id.GetHashCode(),
+                        URL = part.smile.medium_url
+                    };
+                if (part.mention != null)
+                    ep.Reply = new OuterInput.Part.Mention
+                    {
+                        Nick = part.mention.nick
+                    };
+
+                list.Add(ep);
+            }
+
+            return list;
+        }
+        protected virtual List<OuterInput.Badge> ExtractBadges(Author author)
+        {
+            var list = new List<OuterInput.Badge>()
+            {
+                new OuterInput.Badge
+                {
+                    Hash = 0
+                }
+            };
+
+            for (int r = 0; r < author.roles.Count; r++)
+            {
+                var role = author.roles[r];
+
+                list.Add(new OuterInput.Badge
+                {
+                    Hash = role.id.GetHashCode(),
+                    URL = role.medium_url,
+                });
+            }
+
+            for (int b = 0; b < author.badges.Count; b++)
+            {
+                var badge = author.badges[b];
+
+                list.Add(new OuterInput.Badge
+                {
+                    Hash = badge.id.GetHashCode(),
+                    URL = badge.medium_url,
+                });
+            }
+
+            return list;
         }
     }
 }

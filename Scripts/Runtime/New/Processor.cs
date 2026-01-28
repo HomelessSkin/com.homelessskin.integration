@@ -18,6 +18,16 @@ namespace Integration2
 {
     public abstract class Processor : ScriptableObject
     {
+        public void StartAuth()
+        {
+            //var scope = "scope=";
+            //if (scopes != null)
+            //    for (int s = 0; s < Scopes.Length; s++)
+            //        scope += $"{Scopes[s]}" + (s == scopes.Length - 1 ? "" : "%20");
+
+            //Application.OpenURL($"{AuthPath}?response_type=token&client_id={AppID}&redirect_uri={RedirectPath}&{scope}");
+        }
+
         [SerializeField] bool LogMessageTypes = true;
         [SerializeField] protected string AppID;
         [SerializeField] protected string SocketURL;
@@ -52,7 +62,7 @@ namespace Integration2
         public abstract Task<string> Connect(Platform platform);
         public abstract void OnOpen(Platform platform);
         public abstract void OnPing(Platform platform);
-        public abstract void InvokeAsync(SocketMessage message, EntityManager manager);
+        public abstract void Invoke(SocketMessage message, EntityManager manager);
 
         protected abstract void SubscribeToEvent(string type, Platform platform);
 

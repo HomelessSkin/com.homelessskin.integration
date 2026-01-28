@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c72d85b0be00e7648823fac9e6e8d7f8, type: 3}
   m_Name: VK
   m_EditorClassIdentifier: com.homelessskin.integration::Integration2.VK
-  LogMessageTypes: 0
+  LogMessageTypes: 1
   AppID: p61uibtoabrmz18v
   SocketURL: wss://pubsub-dev.live.vkvideo.ru/connection/websocket?format=json&cf_protocol_version=v2
   RedirectURL: https://oauth.vk.com/blank.html

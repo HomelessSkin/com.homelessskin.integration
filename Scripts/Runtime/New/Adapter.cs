@@ -27,44 +27,6 @@ namespace Integration2
 
         protected ConcurrentQueue<SocketMessage> SocketMessages = new ConcurrentQueue<SocketMessage>();
 
-        #region old
-        //protected async void EnqueueMessage(SocketMessage message)
-        //{
-        //    await Task.Delay(0);
-        //    //if (message.Parts != null)
-        //    //    for (int p = 0; p < message.Parts.Count; p++)
-        //    //    {
-        //    //        var part = message.Parts[p];
-
-        //    //        if (!string.IsNullOrEmpty(part.Emote.URL))
-        //    //        {
-        //    //            var smile = await Web.DownloadSpriteTexture(part.Emote.URL);
-        //    //            if (smile)
-        //    //                Manager.DrawSmile(smile, part.Emote.Hash);
-        //    //            else
-        //    //                part.Emote.Hash = 0;
-        //    //        }
-
-        //    //        message.Parts[p] = part;
-        //    //    }
-
-        //    //if (message.Badges != null)
-        //    //    for (int b = 0; b < message.Badges.Count; b++)
-        //    //    {
-        //    //        var part = message.Badges[b];
-
-        //    //        if (!string.IsNullOrEmpty(part.URL))
-        //    //        {
-        //    //            var badge = await Web.DownloadSpriteTexture(part.URL);
-        //    //            if (badge)
-        //    //                Manager.DrawBadge(badge, part.Hash);
-        //    //        }
-        //    //    }
-
-        //    //SocketMessages.Enqueue(message);
-        //}
-        #endregion
-
         public void Load()
         {
             EntityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
@@ -124,8 +86,8 @@ namespace Integration2
 
                     Processor.SubscribeToEvents(Platform);
                     break;
-                    default:
-                    Processor.InvokeAsync(message, EntityManager);
+                    case "notification":
+                    Processor.Invoke(message, EntityManager);
                     break;
                 }
             }

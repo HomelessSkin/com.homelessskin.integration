@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 using Core;
@@ -16,8 +17,11 @@ namespace Integration2
     [CreateAssetMenu(fileName = "Twitch", menuName = "Integration/Twitch Processor")]
     public class Twitch : Processor
     {
+        protected static string AuthPath = "https://id.twitch.tv/oauth2/authorize";
         protected static string EventSubURL = "https://api.twitch.tv/helix/eventsub/subscriptions";
         protected static string GetUsersURL = "https://api.twitch.tv/helix/users";
+        protected static string EmoteURL = "https://static-cdn.jtvnw.net/emoticons/v2";
+        protected static string BadgesURL = $"https://api.twitch.tv/helix/chat/badges";
 
         public async override Task<string> Connect(Platform data)
         {
@@ -56,26 +60,27 @@ namespace Integration2
 
             base.DetermineType(ref message);
         }
-        public override async void InvokeAsync(SocketMessage message, EntityManager manager)
+        public override void Invoke(SocketMessage message, EntityManager manager)
         {
             switch (message.metadata.subscription_type)
             {
                 case "channel.chat.message":
-                Sys.Add_M(new IInteractable.Event
+                Sys.Add_M(new OuterInput
                 {
                     Title = "Message",
                     Platform = "twitch",
                     ID = message.payload.@event.message_id,
                     Nick = message.payload.@event.chatter_user_name,
                     NickColor = message.payload.@event.color,
-                    UserInput = await ExtractText(message)
+                    UserInput = ExtractChatMessage(message.payload.@event.message.fragments),
+                    Badges = ExtractBadges(message.payload.@event.badges),
                 },
                 manager);
                 break;
                 case "channel.chat.message_delete":
-                Sys.Add_M(new IInteractable.Event
+                Sys.Add_M(new OuterInput
                 {
-                    Title = "DeleteMessage",
+                    Title = "Delete Message",
                     Platform = "twitch",
                     ID = message.payload.@event.message_id,
                 },
@@ -119,10 +124,54 @@ namespace Integration2
                     Log.Error(this, $"Failed to create subscription to: {type} event. With error: {request.error}");
             }
         }
-        protected virtual async Task<string> ExtractText(SocketMessage message)
+        protected virtual List<OuterInput.Part> ExtractChatMessage(Fragment[] fragments)
         {
-            await Task.Delay(0);
-            return "";
+            var list = new List<OuterInput.Part>();
+
+            for (int f = 0; f < fragments.Length; f++)
+            {
+                var fragment = fragments[f];
+                var ep = new OuterInput.Part();
+
+                if (!string.IsNullOrEmpty(fragment.emote.id))
+                    ep.Emote = new OuterInput.Part.Smile
+                    {
+                        Hash = fragment.emote.id.GetHashCode(),
+                        URL = EmoteURL + $"/{fragment.emote.id}/static/light/2.0"
+                    };
+                else if (fragment.text != null)
+                    ep.Message = new OuterInput.Part.Text
+                    {
+                        Content = fragments[f].text
+                    };
+
+                list.Add(ep);
+            }
+
+            return list;
+        }
+        protected virtual List<OuterInput.Badge> ExtractBadges(Badge[] badges)
+        {
+            var list = new List<OuterInput.Badge>()
+            {
+                new OuterInput.Badge
+                {
+                    Hash = 1
+                }
+            };
+
+            for (int f = 0; f < badges.Length; f++)
+            {
+                var badge = badges[f];
+                list.Add(new OuterInput.Badge
+                {
+                    Hash = (badge.set_id + badge.id).GetHashCode(),
+                    SetID = badge.set_id,
+                    ID = badge.id,
+                });
+            }
+
+            return list;
         }
     }
 }

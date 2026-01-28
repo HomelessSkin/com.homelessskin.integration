@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a2e5b5f0102b6d84092625b4cffaac18, type: 3}
   m_Name: Twitch
   m_EditorClassIdentifier: com.homelessskin.integration::Integration2.Twitch
-  LogMessageTypes: 0
+  LogMessageTypes: 1
   AppID: 6ss2l29z27gl1rmz061rajdhd9mgr6
   SocketURL: wss://eventsub.wss.twitch.tv/ws
   RedirectURL: https://oauth.vk.com/blank.html
