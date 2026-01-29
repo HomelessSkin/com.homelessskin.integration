@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Integration2
+namespace Integration
 {
     public class IntegrationManager : MonoBehaviour
     {

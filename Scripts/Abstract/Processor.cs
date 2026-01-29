@@ -14,7 +14,7 @@ using UnityEditor;
 
 using UnityEngine;
 
-namespace Integration2
+namespace Integration
 {
     public abstract class Processor : ScriptableObject
     {

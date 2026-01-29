@@ -14,7 +14,7 @@ using UnityEngine;
 
 using WebSocketSharp;
 
-namespace Integration2
+namespace Integration
 {
     [Serializable]
     public class Adapter : Storage

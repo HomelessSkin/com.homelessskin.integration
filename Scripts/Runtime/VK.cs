@@ -12,7 +12,7 @@ using Unity.Entities;
 using UnityEngine;
 using UnityEngine.Networking;
 
-namespace Integration2
+namespace Integration
 {
     [CreateAssetMenu(fileName = "VK", menuName = "Integration/VK Processor")]
     public class VK : Processor
