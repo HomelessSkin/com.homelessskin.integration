@@ -101,7 +101,7 @@ namespace Integration
             }
         }
 
-        protected override async void SubscribeToEvent(string type, Platform platform)
+        protected override async Task SubscribeToEvent(string type, Platform platform)
         {
             using (var request = UnityWebRequest.Get(EntryPath +
                 $"/v1/channel" +
@@ -123,7 +123,7 @@ namespace Integration
 
                     switch (type)
                     {
-                        case "chat":
+                        case "sub_chat":
                         message.subscribe = new Sub { channel = $"{channel.web_socket_channels.chat}" };
                         break;
                     }

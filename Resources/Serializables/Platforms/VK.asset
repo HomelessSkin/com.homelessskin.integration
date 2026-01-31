@@ -18,7 +18,7 @@ MonoBehaviour:
   RedirectURL: https://oauth.vk.com/blank.html
   Scopes: []
   Events:
-  - chat
+  - sub_chat
   MessageTypes:
   - ID: 792420933
     Name: session_welcome
@@ -26,3 +26,5 @@ MonoBehaviour:
     Name: session_keepalive
   - ID: 1638540191
     Name: channel_chat_message_send
+  - ID: 1055809941
+    Name: sub_chat
