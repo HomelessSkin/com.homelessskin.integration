@@ -89,7 +89,7 @@ namespace Integration
             }
         }
 
-        protected async override Task SubscribeToEvent(string type, Platform platform)
+        protected async override void SubscribeToEvent(string type, Platform platform)
         {
             var data = JsonUtility.ToJson(new EventSubRequest
             {

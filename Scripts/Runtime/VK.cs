@@ -101,7 +101,7 @@ namespace Integration
             }
         }
 
-        protected override async Task SubscribeToEvent(string type, Platform platform)
+        protected override async void SubscribeToEvent(string type, Platform platform)
         {
             using (var request = UnityWebRequest.Get(EntryPath +
                 $"/v1/channel" +

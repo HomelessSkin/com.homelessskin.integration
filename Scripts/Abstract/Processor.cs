@@ -51,7 +51,11 @@ namespace Integration
         public async void SubscribeToEvents(Platform platform)
         {
             for (int e = 0; e < Events.Length; e++)
-                await SubscribeToEvent(Events[e], platform);
+            {
+                SubscribeToEvent(Events[e], platform);
+
+                await Task.Delay(30);
+            }
         }
         public virtual void DetermineType(ref SocketMessage message)
         {
@@ -64,7 +68,7 @@ namespace Integration
         public abstract void OnPing(Platform platform);
         public abstract void Invoke(SocketMessage message, EntityManager manager);
 
-        protected abstract Task SubscribeToEvent(string type, Platform platform);
+        protected abstract void SubscribeToEvent(string type, Platform platform);
 
         protected string IDToType(uint id)
         {
