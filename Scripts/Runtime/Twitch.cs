@@ -54,7 +54,7 @@ namespace Integration
                 message.type = message.metadata.message_type;
                 break;
                 default:
-                message.type = message.metadata.subscription_type;
+                message.type = message.metadata.message_type;
                 break;
             }
 
