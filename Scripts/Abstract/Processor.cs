@@ -28,18 +28,21 @@ namespace Integration
             //Application.OpenURL($"{AuthPath}?response_type=token&client_id={AppID}&redirect_uri={RedirectPath}&{scope}");
         }
 
-        [SerializeField] bool LogMessageTypes = true;
+        [Header("Authorization")]
+        [Space]
         [SerializeField] protected string AppID;
         [SerializeField] protected string SocketURL;
         [SerializeField] protected string RedirectURL = "https://oauth.vk.com/blank.html";
-
-        [Space]
         [SerializeField] protected string[] Scopes;
 
+        [Header("Events")]
         [Space]
+        [SerializeField] int SubscriptionDelay = 60;
         [SerializeField] protected string[] Events;
 
+        [Header("Socket Messages")]
         [Space]
+        [SerializeField] bool LogMessageTypes = true;
         [SerializeField]
         protected MessageType[] MessageTypes = new MessageType[]
         {
@@ -54,7 +57,7 @@ namespace Integration
             {
                 SubscribeToEvent(Events[e], platform);
 
-                await Task.Delay(30);
+                await Task.Delay(SubscriptionDelay);
             }
         }
         public virtual void DetermineType(ref SocketMessage message)

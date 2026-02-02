@@ -23,6 +23,9 @@ namespace Integration
         protected static string EmoteURL = "https://static-cdn.jtvnw.net/emoticons/v2";
         protected static string BadgesURL = $"https://api.twitch.tv/helix/chat/badges";
 
+        BadgesResponse GlobalBadges;
+        BadgesResponse UserBadges;
+
         public async override Task<string> Connect(Platform data)
         {
             using (var request = UnityWebRequest.Get(GetUsersURL + $"?login={data.Channel}"))
@@ -40,9 +43,10 @@ namespace Integration
 
             return "";
         }
-        public override void OnOpen(Platform data)
+        public override async void OnOpen(Platform platform)
         {
-
+            GlobalBadges = await RefreshBadgeSet("/global", platform.Token);
+            UserBadges = await RefreshBadgeSet($"?broadcaster_id={platform.ChannelID}", platform.Token);
         }
         public override void OnPing(Platform platform) { }
         public override void DetermineType(ref SocketMessage message)
@@ -134,10 +138,10 @@ namespace Integration
                 var ep = new OuterInput.Part();
 
                 if (!string.IsNullOrEmpty(fragment.emote.id))
-                    ep.Emote = new OuterInput.Part.Smile
+                    ep.Emote = new OuterInput.Icon
                     {
-                        Hash = fragment.emote.id.GetHashCode(),
-                        URL = EmoteURL + $"/{fragment.emote.id}/static/light/2.0"
+                        Index = StreamingSprites.GetSpriteIndex(fragment.emote.id.GetHashCode(),
+                        EmoteURL + $"/{fragment.emote.id}/static/light/2.0")
                     };
                 else if (fragment.text != null)
                     ep.Message = new OuterInput.Part.Text
@@ -150,28 +154,72 @@ namespace Integration
 
             return list;
         }
-        protected virtual List<OuterInput.Badge> ExtractBadges(Badge[] badges)
+        protected virtual List<OuterInput.Icon> ExtractBadges(JSON.Badge[] badges)
         {
-            var list = new List<OuterInput.Badge>()
+            var list = new List<OuterInput.Icon>()
             {
-                new OuterInput.Badge
+                new OuterInput.Icon
                 {
-                    Hash = 1
+                    Index = 1
                 }
             };
 
             for (int f = 0; f < badges.Length; f++)
             {
                 var badge = badges[f];
-                list.Add(new OuterInput.Badge
+                list.Add(new OuterInput.Icon
                 {
-                    Hash = (badge.set_id + badge.id).GetHashCode(),
-                    SetID = badge.set_id,
-                    ID = badge.id,
+                    Index = StreamingSprites.GetSpriteIndex((badge.set_id + badge.id).GetHashCode(),
+                    GetBadgeURI(badge.set_id, badge.id)),
                 });
             }
 
             return list;
+        }
+
+        string GetBadgeURI(string set_id, string id)
+        {
+            if (set_id == "subscriber")
+            {
+                for (int r = 0; r < UserBadges.data.Count; r++)
+                    if (UserBadges.data[r].set_id == set_id)
+                    {
+                        var versions = UserBadges.data[r].versions;
+                        for (int v = 0; v < versions.Count; v++)
+                            if (versions[v].id == id)
+                                return versions[v].image_url_2x;
+                    }
+            }
+            else
+            {
+                for (int r = 0; r < GlobalBadges.data.Count; r++)
+                    if (GlobalBadges.data[r].set_id == set_id)
+                    {
+                        var versions = GlobalBadges.data[r].versions;
+                        for (int v = 0; v < versions.Count; v++)
+                            if (versions[v].id == id)
+                                return versions[v].image_url_2x;
+                    }
+            }
+
+            return "";
+        }
+        async Task<BadgesResponse> RefreshBadgeSet(string uri, string token)
+        {
+            using (var request = UnityWebRequest.Get($"{BadgesURL}{uri}"))
+            {
+                request.SetRequestHeader("Authorization", $"Bearer {token}");
+                request.SetRequestHeader("Client-ID", AppID);
+
+                await request.SendWebRequest();
+
+                if (request.result == UnityWebRequest.Result.Success)
+                    return JsonUtility.FromJson<BadgesResponse>(request.downloadHandler.text);
+                else
+                    Log.Error(this, request.error);
+            }
+
+            return null;
         }
     }
 }

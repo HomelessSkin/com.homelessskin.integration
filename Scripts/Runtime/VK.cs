@@ -135,7 +135,7 @@ namespace Integration
                     Log.Error(this, $"{request.error}");
             }
         }
-        protected virtual List<OuterInput.Part> ExtractChatMessage(Message message)
+        protected virtual List<OuterInput.Part> ExtractChatMessage(JSON.Message message)
         {
             var list = new List<OuterInput.Part>();
             var tasks = new List<Task>();
@@ -151,10 +151,10 @@ namespace Integration
                         Content = part.text.content
                     };
                 if (part.smile != null && !string.IsNullOrEmpty(part.smile.medium_url))
-                    ep.Emote = new OuterInput.Part.Smile
+                    ep.Emote = new OuterInput.Icon
                     {
-                        Hash = part.smile.id.GetHashCode(),
-                        URL = part.smile.medium_url
+                        Index = StreamingSprites.GetSpriteIndex(part.smile.id.GetHashCode(),
+                        part.smile.medium_url)
                     };
                 if (part.mention != null)
                     ep.Reply = new OuterInput.Part.Mention
@@ -167,13 +167,13 @@ namespace Integration
 
             return list;
         }
-        protected virtual List<OuterInput.Badge> ExtractBadges(Author author)
+        protected virtual List<OuterInput.Icon> ExtractBadges(Author author)
         {
-            var list = new List<OuterInput.Badge>()
+            var list = new List<OuterInput.Icon>()
             {
-                new OuterInput.Badge
+                new OuterInput.Icon
                 {
-                    Hash = 0
+                    Index = 0
                 }
             };
 
@@ -181,10 +181,10 @@ namespace Integration
             {
                 var role = author.roles[r];
 
-                list.Add(new OuterInput.Badge
+                list.Add(new OuterInput.Icon
                 {
-                    Hash = role.id.GetHashCode(),
-                    URL = role.medium_url,
+                    Index = StreamingSprites.GetSpriteIndex(role.id.GetHashCode(),
+                    role.medium_url),
                 });
             }
 
@@ -192,10 +192,10 @@ namespace Integration
             {
                 var badge = author.badges[b];
 
-                list.Add(new OuterInput.Badge
+                list.Add(new OuterInput.Icon
                 {
-                    Hash = badge.id.GetHashCode(),
-                    URL = badge.medium_url,
+                    Index = StreamingSprites.GetSpriteIndex(badge.id.GetHashCode(),
+                     badge.medium_url),
                 });
             }
 
