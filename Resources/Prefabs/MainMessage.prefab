@@ -88,7 +88,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d22448c74e6c9ea4ebe87a0d74a56f7a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: com.homelessskin.ui::UI.Drawable
-  _Type: 5
+  _Type: 14
   Key: 
   NonRedrawable: 0
   Mask: {fileID: 951460859060681964}
@@ -170,8 +170,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
-  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+    rgba: 4278190080
+  m_fontColor: {r: 0, g: 0, b: 0, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -188,8 +188,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
-  m_fontSizeBase: 36
+  m_fontSize: 16
+  m_fontSizeBase: 16
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -452,7 +452,7 @@ GameObject:
   - component: {fileID: 7482868806306330171}
   - component: {fileID: 6543408599918470067}
   - component: {fileID: 1338030089125317245}
-  - component: {fileID: 1435585471507341562}
+  - component: {fileID: 6530288641155861920}
   m_Layer: 5
   m_Name: MainMessage
   m_TagString: Untagged
@@ -503,10 +503,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.VerticalLayoutGroup
   m_Padding:
-    m_Left: 60
-    m_Right: 60
-    m_Top: 60
-    m_Bottom: 60
+    m_Left: 30
+    m_Right: 25
+    m_Top: 20
+    m_Bottom: 15
   m_ChildAlignment: 4
   m_Spacing: 0
   m_ChildForceExpandWidth: 0
@@ -530,7 +530,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.ContentSizeFitter
   m_HorizontalFit: 2
   m_VerticalFit: 2
---- !u!114 &1435585471507341562
+--- !u!114 &6530288641155861920
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -539,7 +539,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 7890616675190739281}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b9495aebc5ad9a744a48ec98faee3bdd, type: 3}
+  m_Script: {fileID: 11500000, guid: 60261b70a90f56d4c8db1cc8aca9445d, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: com.homelessskin.integration::Integration.OBS_Message
+  m_EditorClassIdentifier: com.homelessskin.integration::Integration.Main_Message
   Content: {fileID: 1203381583084898640}

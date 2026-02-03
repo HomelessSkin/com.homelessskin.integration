@@ -16,7 +16,7 @@ MonoBehaviour:
   SocketURL: wss://pubsub-dev.live.vkvideo.ru/connection/websocket?format=json&cf_protocol_version=v2
   RedirectURL: https://oauth.vk.com/blank.html
   Scopes: []
-  SubscriptionDelay: 60
+  SubscriptionDelay: 100
   Events:
   - sub_chat
   LogMessageTypes: 1

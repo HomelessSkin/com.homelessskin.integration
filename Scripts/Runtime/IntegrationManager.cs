@@ -20,6 +20,11 @@ namespace Integration
             VKAdapter.Invoke();
             TwitchAdapter.Invoke();
         }
+        void OnDestroy()
+        {
+            VKAdapter.Disconnect();
+            TwitchAdapter.Disconnect();
+        }
 
         async void StartAdapter(Adapter adapter)
         {

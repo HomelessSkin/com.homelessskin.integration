@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 
+using Core;
+
 using Input;
 
 using TMPro;
@@ -14,11 +16,11 @@ namespace Integration
 
         OuterInput Input;
 
-        List<int> Smiles = new List<int>();
+        List<int> Icons = new List<int>();
 
         internal void Init(OuterInput message)
         {
-            Smiles.Clear();
+            Icons.Clear();
 
             Input = message;
 
@@ -32,10 +34,10 @@ namespace Integration
                 for (int b = 0; b < message.Badges.Count; b++)
                 {
                     var badge = message.Badges[b];
-                    text += $"<sprite name=\"Smiles_{badge.Index}\">";
+                    text += $"<sprite name=\"{StreamingSprites.Asset}_{badge.Index}\">";
 
-                    if (!Smiles.Contains(badge.Index))
-                        Smiles.Add(badge.Index);
+                    if (!Icons.Contains(badge.Index))
+                        Icons.Add(badge.Index);
                 }
 
             text += $"<color={color}>{message.Nick}</color>: ";
@@ -54,10 +56,10 @@ namespace Integration
 
                     if (part.Emote != null)
                     {
-                        text += $"<sprite name=\"Smiles_{part.Emote.Index}\">";
+                        text += $"<sprite name=\"{StreamingSprites.Asset}_{part.Emote.Index}\">";
 
-                        if (!Smiles.Contains(part.Emote.Index))
-                            Smiles.Add(part.Emote.Index);
+                        if (!Icons.Contains(part.Emote.Index))
+                            Icons.Add(part.Emote.Index);
                     }
                 }
 
@@ -69,6 +71,6 @@ namespace Integration
         }
         internal string GetPlatform() => Input.Platform;
         internal string GetID() => Input.ID;
-        internal List<int> GetSmiles() => Smiles;
+        internal List<int> GetSmiles() => Icons;
     }
 }

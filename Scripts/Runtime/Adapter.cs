@@ -22,6 +22,9 @@ namespace Integration
         [Space]
         [SerializeField] Processor Processor;
 
+        [Space]
+        [SerializeField] Indicator Indicator;
+
         protected EntityManager EntityManager;
         protected Platform Platform;
 
@@ -73,6 +76,7 @@ namespace Integration
         {
             while (SocketMessages.TryDequeue(out var message))
             {
+                Indicator?.Refresh();
                 Processor.DetermineType(ref message);
 
                 switch (message.type)
