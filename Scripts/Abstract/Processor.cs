@@ -3,6 +3,8 @@ using System.Threading.Tasks;
 
 using Core;
 
+using Input;
+
 using Integration.JSON;
 
 using Unity.Entities;
@@ -18,19 +20,10 @@ namespace Integration
 {
     public abstract class Processor : ScriptableObject
     {
-        public void StartAuth()
-        {
-            //var scope = "scope=";
-            //if (scopes != null)
-            //    for (int s = 0; s < Scopes.Length; s++)
-            //        scope += $"{Scopes[s]}" + (s == scopes.Length - 1 ? "" : "%20");
-
-            //Application.OpenURL($"{AuthPath}?response_type=token&client_id={AppID}&redirect_uri={RedirectPath}&{scope}");
-        }
-
         [Header("Authorization")]
         [Space]
         [SerializeField] protected string AppID;
+        [SerializeField] protected string AuthURL;
         [SerializeField] protected string SocketURL;
         [SerializeField] protected string RedirectURL = "https://oauth.vk.com/blank.html";
         [SerializeField] protected string[] Scopes;
@@ -50,6 +43,15 @@ namespace Integration
             new MessageType { Name = "session_keepalive" },
         };
 
+        public void StartAuth()
+        {
+            var scope = "scope=";
+            if (Scopes != null)
+                for (int s = 0; s < Scopes.Length; s++)
+                    scope += $"{Scopes[s]}" + (s == Scopes.Length - 1 ? "" : "%20");
+
+            Application.OpenURL($"{AuthURL}?response_type=token&client_id={AppID}&redirect_uri={RedirectURL}&{scope}");
+        }
         public string GetSocketURL() => SocketURL;
         public async void SubscribeToEvents(Platform platform)
         {
@@ -69,6 +71,7 @@ namespace Integration
         public abstract void OnOpen(Platform platform);
         public abstract void OnPing(Platform platform);
         public abstract void Invoke(SocketMessage message, EntityManager manager);
+        public abstract void RequestDeleteMessage(OuterInput input, Platform platform);
 
         protected abstract Task SubscribeToEvent(string type, Platform platform);
 

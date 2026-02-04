@@ -17,11 +17,11 @@ namespace Integration
     [CreateAssetMenu(fileName = "Twitch", menuName = "Integration/Twitch Processor")]
     public class Twitch : Processor
     {
-        protected static string AuthPath = "https://id.twitch.tv/oauth2/authorize";
         protected static string EventSubURL = "https://api.twitch.tv/helix/eventsub/subscriptions";
         protected static string GetUsersURL = "https://api.twitch.tv/helix/users";
         protected static string EmoteURL = "https://static-cdn.jtvnw.net/emoticons/v2";
         protected static string BadgesURL = $"https://api.twitch.tv/helix/chat/badges";
+        protected static string ModerationURL = $"https://api.twitch.tv/helix/moderation/chat";
 
         BadgesResponse GlobalBadges;
         BadgesResponse UserBadges;
@@ -92,6 +92,24 @@ namespace Integration
                 break;
             }
         }
+        public override async void RequestDeleteMessage(OuterInput input, Platform platform)
+        {
+            using (var request = UnityWebRequest.Delete($"{ModerationURL}" +
+                $"?broadcaster_id={platform.ChannelID}" +
+                $"&moderator_id={platform.ChannelID}" +
+                $"&message_id={input.ID}"))
+            {
+                request.SetRequestHeader("Authorization", $"Bearer {platform.Token}");
+                request.SetRequestHeader("Client-ID", AppID);
+
+                await request.SendWebRequest();
+
+                if (request.result == UnityWebRequest.Result.Success)
+                    Log.Info(this, $"Delete message {input.ID} success!");
+                else
+                    Log.Error(this, request.error);
+            }
+        }
 
         protected async override Task SubscribeToEvent(string type, Platform platform)
         {
@@ -138,11 +156,14 @@ namespace Integration
                 var ep = new OuterInput.Part();
 
                 if (!string.IsNullOrEmpty(fragment.emote.id))
+                {
+                    var hash = fragment.emote.id.GetHashCode();
                     ep.Emote = new OuterInput.Icon
                     {
-                        Index = StreamingSprites.GetSpriteIndex(fragment.emote.id.GetHashCode(),
-                        EmoteURL + $"/{fragment.emote.id}/static/light/2.0")
+                        Hash = hash,
+                        Index = StreamingSprites.GetSpriteIndex(hash, EmoteURL + $"/{fragment.emote.id}/static/light/2.0")
                     };
+                }
                 else if (fragment.text != null)
                     ep.Message = new OuterInput.Part.Text
                     {
@@ -167,10 +188,11 @@ namespace Integration
             for (int f = 0; f < badges.Length; f++)
             {
                 var badge = badges[f];
+                var hash = (badge.set_id + badge.id).GetHashCode();
                 list.Add(new OuterInput.Icon
                 {
-                    Index = StreamingSprites.GetSpriteIndex((badge.set_id + badge.id).GetHashCode(),
-                    GetBadgeURI(badge.set_id, badge.id)),
+                    Hash = hash,
+                    Index = StreamingSprites.GetSpriteIndex(hash, GetBadgeURI(badge.set_id, badge.id)),
                 });
             }
 
@@ -204,9 +226,9 @@ namespace Integration
 
             return "";
         }
-        async Task<BadgesResponse> RefreshBadgeSet(string uri, string token)
+        async Task<BadgesResponse> RefreshBadgeSet(string url, string token)
         {
-            using (var request = UnityWebRequest.Get($"{BadgesURL}{uri}"))
+            using (var request = UnityWebRequest.Get($"{BadgesURL}{url}"))
             {
                 request.SetRequestHeader("Authorization", $"Bearer {token}");
                 request.SetRequestHeader("Client-ID", AppID);
@@ -215,7 +237,7 @@ namespace Integration
 
                 if (request.result == UnityWebRequest.Result.Success)
                 {
-                    Log.Info(this, $"{uri} Badge Set loaded successfully.");
+                    Log.Info(this, $"{url} Badge Set loaded successfully.");
 
                     return JsonUtility.FromJson<BadgesResponse>(request.downloadHandler.text);
                 }

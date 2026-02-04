@@ -10,7 +10,6 @@ namespace Integration
 {
     public class ListPlatform : ScrollItem
     {
-        [SerializeField] TMP_Text Enabled;
         [SerializeField] TMP_Text Type;
         [SerializeField] TMP_Text Channel;
 
@@ -20,7 +19,6 @@ namespace Integration
 
             var platform = (Platform)data;
 
-            Enabled.text = $"{platform.Enabled}";
             Type.text = $"{platform.Name}";
             Channel.text = $"{platform.Channel}";
         }

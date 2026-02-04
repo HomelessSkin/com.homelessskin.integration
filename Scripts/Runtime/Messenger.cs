@@ -20,7 +20,7 @@ namespace Integration
         public void ClearChat()
         {
             for (int m = 0; m < Messages.Count; m++)
-                RemoveMessage(Messages[m]);
+                ToPool(Messages[m]);
 
             Messages.Clear();
         }
@@ -33,27 +33,25 @@ namespace Integration
         }
         public void OnDeleteMessage(OuterInput message, Command command)
         {
-            var index = -1;
             for (int m = 0; m < Messages.Count; m++)
             {
                 var me = Messages[m];
                 if (me.GetPlatform() == message.Platform &&
                       me.GetID() == message.ID)
                 {
-                    index = m;
+                    ToPool(me);
 
-                    RemoveMessage(me);
+                    Messages.RemoveAt(m);
 
                     break;
                 }
             }
-
-            if (index >= 0)
-                Messages.RemoveAt(index);
         }
 
         protected virtual void ToPool(Message message)
         {
+            StreamingSprites.RemoveRange(message.GetSmiles());
+
             message.transform.SetParent(null);
             message.gameObject.SetActive(false);
 
@@ -83,13 +81,6 @@ namespace Integration
                 message = Instantiate(MessagePrefab, Content, false).GetComponent<Message>();
 
             return message;
-        }
-
-        void RemoveMessage(Message message)
-        {
-            StreamingSprites.RemoveRange(message.GetSmiles());
-
-            ToPool(message);
         }
     }
 }

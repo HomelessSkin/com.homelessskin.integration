@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: VK
   m_EditorClassIdentifier: com.homelessskin.integration::Integration2.VK
   AppID: p61uibtoabrmz18v
+  AuthURL: https://auth.live.vkvideo.ru/app/oauth2/authorize
   SocketURL: wss://pubsub-dev.live.vkvideo.ru/connection/websocket?format=json&cf_protocol_version=v2
   RedirectURL: https://oauth.vk.com/blank.html
   Scopes: []

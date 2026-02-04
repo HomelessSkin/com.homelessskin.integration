@@ -1,10 +1,14 @@
 using System;
 using System.Collections.Concurrent;
-using System.Threading.Tasks;
+using System.Web;
 
 using Core;
 
+using Input;
+
 using Integration.JSON;
+
+using TMPro;
 
 using UI;
 
@@ -19,17 +23,23 @@ namespace Integration
     [Serializable]
     public class Adapter : Storage
     {
+        protected static string ExtractToken(string text) =>
+            HttpUtility.ParseQueryString(new Uri(text).Fragment.TrimStart('#'))["access_token"];
+
         [Space]
         [SerializeField] Processor Processor;
 
         [Space]
         [SerializeField] Indicator Indicator;
+        [SerializeField] TMP_InputField TokenInput;
+        [SerializeField] TMP_InputField ChannelInput;
 
         protected EntityManager EntityManager;
         protected Platform Platform;
 
         protected ConcurrentQueue<SocketMessage> SocketMessages = new ConcurrentQueue<SocketMessage>();
 
+        public void StartAuth() => Processor.StartAuth();
         public void Load()
         {
             EntityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
@@ -40,31 +50,50 @@ namespace Integration
 
             Platform = JsonUtility.FromJson<Platform>(platform);
         }
-        public void Reset(string name, string channel, string token)
+        public void Reset()
         {
-            Platform = new Platform
+            if (string.IsNullOrEmpty(TokenInput.text))
             {
-                Name = name,
+                Log.Warning(this, "Token Input is empty!");
 
-                Enabled = true,
-                Token = token,
-                Channel = channel,
-            };
+                return;
+            }
+
+            if (string.IsNullOrEmpty(ChannelInput.text))
+            {
+                Log.Warning(this, "Channel Input is empty!");
+
+                return;
+            }
+
+            var token = ExtractToken(TokenInput.text);
+            if (string.IsNullOrEmpty(token))
+            {
+                Log.Error(this, "Incorrect Token!");
+
+                return;
+            }
+
+            if (Platform == null)
+                Platform = new Platform();
+
+            Platform.Name = Processor.name;
+            Platform.Token = token;
+            Platform.Channel = ChannelInput.name;
+
+            Save(Platform);
+            Connect();
         }
-        public async Task Connect()
+        public async void Connect()
         {
-            if (!VerifyToken())
+            Log.Info(this, $"Platform {Processor.name} is trying to connect...");
+
+            if (!VerifyPlatform())
                 return;
 
             Platform.ChannelID = await Processor.Connect(Platform);
             if (!string.IsNullOrEmpty(Platform.ChannelID))
                 InitializeSocket(Processor.GetSocketURL());
-        }
-        public void IsAlive()
-        {
-            if (Platform != null &&
-                 Platform.Socket != null)
-                Log.Warning(this, $"{Platform.Name}'s Connection is: {Platform.Socket.IsAlive}");
         }
         public void Disconnect()
         {
@@ -96,6 +125,7 @@ namespace Integration
                 }
             }
         }
+        public void RequestDeleteMessage(OuterInput input) => Processor.RequestDeleteMessage(input, Platform);
 
         void InitializeSocket(string url)
         {
@@ -120,11 +150,17 @@ namespace Integration
         void OnClose(object sender, CloseEventArgs e) => Log.Warning(this, $"{e.Reason} {e.Code}");
         void OnError(object sender, ErrorEventArgs e) => Log.Error(this, $"{e.Message}");
 
-        bool VerifyToken()
+        bool VerifyPlatform()
         {
             if (string.IsNullOrEmpty(Platform.Token))
             {
                 Log.Warning(this, $"Platform {Processor.name} doesn't have a User Token!");
+
+                return false;
+            }
+            else if (string.IsNullOrEmpty(Platform.Channel))
+            {
+                Log.Warning(this, $"Platform {Processor.name} doesn't have a Channel!");
 
                 return false;
             }
@@ -141,7 +177,6 @@ namespace Integration
         [NonSerialized] public string SessionID;
         [NonSerialized] public WebSocket Socket;
 
-        public bool Enabled;
         public string Token;
         public string Channel;
     }

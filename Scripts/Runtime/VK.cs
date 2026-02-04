@@ -100,6 +100,10 @@ namespace Integration
                 break;
             }
         }
+        public override void RequestDeleteMessage(OuterInput input, Platform platform)
+        {
+
+        }
 
         protected override async Task SubscribeToEvent(string type, Platform platform)
         {
@@ -151,11 +155,14 @@ namespace Integration
                         Content = part.text.content
                     };
                 if (part.smile != null && !string.IsNullOrEmpty(part.smile.medium_url))
+                {
+                    var hash = part.smile.id.GetHashCode();
                     ep.Emote = new OuterInput.Icon
                     {
-                        Index = StreamingSprites.GetSpriteIndex(part.smile.id.GetHashCode(),
-                        part.smile.medium_url)
+                        Hash = hash,
+                        Index = StreamingSprites.GetSpriteIndex(hash, part.smile.medium_url)
                     };
+                }
                 if (part.mention != null)
                     ep.Reply = new OuterInput.Part.Mention
                     {
@@ -180,22 +187,24 @@ namespace Integration
             for (int r = 0; r < author.roles.Count; r++)
             {
                 var role = author.roles[r];
+                var hash = role.id.GetHashCode();
 
                 list.Add(new OuterInput.Icon
                 {
-                    Index = StreamingSprites.GetSpriteIndex(role.id.GetHashCode(),
-                    role.medium_url),
+                    Hash = hash,
+                    Index = StreamingSprites.GetSpriteIndex(hash, role.medium_url),
                 });
             }
 
             for (int b = 0; b < author.badges.Count; b++)
             {
                 var badge = author.badges[b];
+                var hash = badge.id.GetHashCode();
 
                 list.Add(new OuterInput.Icon
                 {
-                    Index = StreamingSprites.GetSpriteIndex(badge.id.GetHashCode(),
-                     badge.medium_url),
+                    Hash = hash,
+                    Index = StreamingSprites.GetSpriteIndex(hash, badge.medium_url),
                 });
             }
 
