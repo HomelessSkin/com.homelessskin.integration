@@ -23,8 +23,18 @@ namespace Integration
     [Serializable]
     public class Adapter : Storage
     {
-        protected static string ExtractToken(string text) =>
-            HttpUtility.ParseQueryString(new Uri(text).Fragment.TrimStart('#'))["access_token"];
+        protected static string ExtractToken(string text)
+        {
+            if (string.IsNullOrEmpty(text))
+                return "";
+
+            return HttpUtility.ParseQueryString(new Uri(text).Fragment.TrimStart('#'))["access_token"];
+        }
+
+#if UNITY_EDITOR
+        [Space]
+        [SerializeField] bool PrintRawSocket = false;
+#endif
 
         [Space]
         [SerializeField] Processor Processor;
@@ -52,26 +62,42 @@ namespace Integration
         }
         public void Reset()
         {
+            var token = ExtractToken(TokenInput.text);
             if (string.IsNullOrEmpty(TokenInput.text))
             {
-                Log.Warning(this, "Token Input is empty!");
+                Log.Warning(this, "Token Input is invalid!");
 
-                return;
+                if (!string.IsNullOrEmpty(Platform.Token))
+                {
+                    token = Platform.Token;
+
+                    Log.Warning(this, "Using saved Token!");
+                }
+                else
+                {
+                    Log.Error(this, "Please enter valid Token or Redirect URL!");
+
+                    return;
+                }
             }
 
-            if (string.IsNullOrEmpty(ChannelInput.text))
+            var channel = ChannelInput.text;
+            if (string.IsNullOrEmpty(channel))
             {
                 Log.Warning(this, "Channel Input is empty!");
 
-                return;
-            }
+                if (!string.IsNullOrEmpty(Platform.Channel))
+                {
+                    channel = Platform.Channel;
 
-            var token = ExtractToken(TokenInput.text);
-            if (string.IsNullOrEmpty(token))
-            {
-                Log.Error(this, "Incorrect Token!");
+                    Log.Warning(this, "Using saved Channel Name!");
+                }
+                else
+                {
+                    Log.Error(this, "Please enter Channel Name!");
 
-                return;
+                    return;
+                }
             }
 
             if (Platform == null)
@@ -79,7 +105,7 @@ namespace Integration
 
             Platform.Name = Processor.name;
             Platform.Token = token;
-            Platform.Channel = ChannelInput.name;
+            Platform.Channel = channel;
 
             Save(Platform);
             Connect();
@@ -126,6 +152,8 @@ namespace Integration
             }
         }
         public void RequestDeleteMessage(OuterInput input) => Processor.RequestDeleteMessage(input, Platform);
+        public void RequestTimeout(OuterInput input) => Processor.RequestTimeout(input, Platform);
+        public void RequestBan(OuterInput input) => Processor.RequestBan(input, Platform);
 
         void InitializeSocket(string url)
         {
@@ -146,7 +174,15 @@ namespace Integration
             Platform.Socket.Connect();
         }
         void OnOpen(object sender, EventArgs e) => Processor.OnOpen(Platform);
-        void OnMessage(object sender, MessageEventArgs e) => SocketMessages.Enqueue(JsonUtility.FromJson<SocketMessage>(e.Data));
+        void OnMessage(object sender, MessageEventArgs e)
+        {
+#if UNITY_EDITOR
+            if (PrintRawSocket)
+                Debug.Log(e.Data);
+#endif
+
+            SocketMessages.Enqueue(JsonUtility.FromJson<SocketMessage>(e.Data));
+        }
         void OnClose(object sender, CloseEventArgs e) => Log.Warning(this, $"{e.Reason} {e.Code}");
         void OnError(object sender, ErrorEventArgs e) => Log.Error(this, $"{e.Message}");
 

@@ -52,6 +52,19 @@ namespace Integration
                 break;
             }
         }
+        public void Connect(int type)
+        {
+            switch (type)
+            {
+                case 0:
+                VKAdapter.Connect();
+                break;
+                case 1:
+                TwitchAdapter.Connect();
+                break;
+            }
+        }
+
         public void DeleteMessageButton(OuterInput input, Command command = null)
         {
             switch (input.Platform)
@@ -61,6 +74,30 @@ namespace Integration
                 break;
                 case "twitch":
                 TwitchAdapter.RequestDeleteMessage(input);
+                break;
+            }
+        }
+        public void TimeoutButton(OuterInput input, Command command = null)
+        {
+            switch (input.Platform)
+            {
+                case "vk":
+                VKAdapter.RequestTimeout(input);
+                break;
+                case "twitch":
+                TwitchAdapter.RequestTimeout(input);
+                break;
+            }
+        }
+        public void BanButton(OuterInput input, Command command = null)
+        {
+            switch (input.Platform)
+            {
+                case "vk":
+                VKAdapter.RequestBan(input);
+                break;
+                case "twitch":
+                TwitchAdapter.RequestBan(input);
                 break;
             }
         }

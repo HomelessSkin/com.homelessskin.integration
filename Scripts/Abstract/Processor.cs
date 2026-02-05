@@ -72,6 +72,8 @@ namespace Integration
         public abstract void OnPing(Platform platform);
         public abstract void Invoke(SocketMessage message, EntityManager manager);
         public abstract void RequestDeleteMessage(OuterInput input, Platform platform);
+        public abstract void RequestTimeout(OuterInput input, Platform platform);
+        public abstract void RequestBan(OuterInput input, Platform platform);
 
         protected abstract Task SubscribeToEvent(string type, Platform platform);
 

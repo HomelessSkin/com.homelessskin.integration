@@ -69,8 +69,7 @@ namespace Integration
 
             Content.text = text;
         }
-        public string GetPlatform() => Input.Platform;
-        public string GetID() => Input.ID;
+        public OuterInput GetInput() => Input;
         public List<int> GetSmiles() => Icons;
     }
 }

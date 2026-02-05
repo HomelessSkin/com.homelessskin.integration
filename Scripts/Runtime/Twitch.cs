@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -22,6 +23,7 @@ namespace Integration
         protected static string EmoteURL = "https://static-cdn.jtvnw.net/emoticons/v2";
         protected static string BadgesURL = $"https://api.twitch.tv/helix/chat/badges";
         protected static string ModerationURL = $"https://api.twitch.tv/helix/moderation/chat";
+        protected static string BanURL = $"https://api.twitch.tv/helix/moderation/bans";
 
         BadgesResponse GlobalBadges;
         BadgesResponse UserBadges;
@@ -68,12 +70,22 @@ namespace Integration
         {
             switch (message.metadata.subscription_type)
             {
+                case "channel.ban":
+                Sys.Add_M(new OuterInput
+                {
+                    Title = "Ban",
+                    Platform = "twitch",
+                    Nick = message.payload.@event.user_name,
+                },
+                manager);
+                break;
                 case "channel.chat.message":
                 Sys.Add_M(new OuterInput
                 {
                     Title = "Message",
                     Platform = "twitch",
                     ID = message.payload.@event.message_id,
+                    UserID = message.payload.@event.chatter_user_id,
                     Nick = message.payload.@event.chatter_user_name,
                     NickColor = message.payload.@event.color,
                     UserInput = ExtractChatMessage(message.payload.@event.message.fragments),
@@ -106,6 +118,69 @@ namespace Integration
 
                 if (request.result == UnityWebRequest.Result.Success)
                     Log.Info(this, $"Delete message {input.ID} success!");
+                else
+                    Log.Error(this, request.error);
+            }
+        }
+        public override async void RequestTimeout(OuterInput input, Platform platform)
+        {
+            using (var request = UnityWebRequest.Post($"{BanURL}" +
+                $"?broadcaster_id={platform.ChannelID}" +
+                $"&moderator_id={platform.ChannelID}",
+                "",
+                "application/json"))
+            {
+                request.SetRequestHeader("Authorization", $"Bearer {platform.Token}");
+                request.SetRequestHeader("Client-ID", AppID);
+
+                var data = JsonUtility.ToJson(new Timeout
+                {
+                    data = new TimeoutData
+                    {
+                        user_id = input.UserID,
+                        duration = 600
+                    }
+                });
+                var bodyRaw = System.Text.Encoding.UTF8.GetBytes(data);
+
+                request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+                request.downloadHandler = new DownloadHandlerBuffer();
+
+                await request.SendWebRequest();
+
+                if (request.result == UnityWebRequest.Result.Success)
+                    Log.Info(this, $"Timeout User {input.UserID} success!");
+                else
+                    Log.Error(this, request.error);
+            }
+        }
+        public override async void RequestBan(OuterInput input, Platform platform)
+        {
+            using (var request = UnityWebRequest.Post($"{BanURL}" +
+                $"?broadcaster_id={platform.ChannelID}" +
+                $"&moderator_id={platform.ChannelID}",
+                "",
+                "application/json"))
+            {
+                request.SetRequestHeader("Authorization", $"Bearer {platform.Token}");
+                request.SetRequestHeader("Client-ID", AppID);
+
+                var data = JsonUtility.ToJson(new Ban
+                {
+                    data = new BanData
+                    {
+                        user_id = input.UserID,
+                    }
+                });
+                var bodyRaw = System.Text.Encoding.UTF8.GetBytes(data);
+
+                request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+                request.downloadHandler = new DownloadHandlerBuffer();
+
+                await request.SendWebRequest();
+
+                if (request.result == UnityWebRequest.Result.Success)
+                    Log.Info(this, $"Ban User {input.UserID} success!");
                 else
                     Log.Error(this, request.error);
             }
@@ -247,5 +322,30 @@ namespace Integration
 
             return null;
         }
+
+        #region TIMEOUT
+        [Serializable]
+        class Timeout
+        {
+            public TimeoutData data;
+
+        }
+        [Serializable]
+        class TimeoutData
+        {
+            public string user_id;
+            public int duration;
+        }
+        [Serializable]
+        class Ban
+        {
+            public BanData data;
+        }
+        [Serializable]
+        class BanData
+        {
+            public string user_id;
+        }
+        #endregion
     }
 }

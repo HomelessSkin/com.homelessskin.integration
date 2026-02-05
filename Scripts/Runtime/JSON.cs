@@ -310,6 +310,7 @@ namespace Integration.JSON
         public string id;
         public string message_id;
         public string color;
+        public string chatter_user_id;
         public string chatter_user_name;
         public string user_id;
         public string user_name;

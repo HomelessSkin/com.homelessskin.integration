@@ -24,28 +24,48 @@ namespace Integration
 
             Messages.Clear();
         }
-        public void OnMessage(OuterInput message, Command command)
+        public void OnMessage(OuterInput input, Command command)
         {
             var m = FromPool();
-            m.Init(message);
+            m.Init(input);
 
             Messages.Add(m);
         }
-        public void OnDeleteMessage(OuterInput message, Command command)
+        public void OnDeleteMessage(OuterInput input, Command command)
         {
             for (int m = 0; m < Messages.Count; m++)
             {
-                var me = Messages[m];
-                if (me.GetPlatform() == message.Platform &&
-                      me.GetID() == message.ID)
+                var message = Messages[m];
+                var m_Input = message.GetInput();
+                if (m_Input.Platform == input.Platform &&
+                      m_Input.ID == input.ID)
                 {
-                    ToPool(me);
+                    ToPool(message);
 
                     Messages.RemoveAt(m);
 
                     break;
                 }
             }
+        }
+        public void OnBan(OuterInput input, Command command)
+        {
+            var toRemove = new List<int>();
+            for (int m = 0; m < Messages.Count; m++)
+            {
+                var message = Messages[m];
+                var m_Input = message.GetInput();
+                if (m_Input.Platform == input.Platform &&
+                      m_Input.Nick == input.Nick)
+                {
+                    ToPool(message);
+
+                    toRemove.Add(m);
+                }
+            }
+
+            for (int t = toRemove.Count - 1; t >= 0; t--)
+                Messages.RemoveAt(toRemove[t]);
         }
 
         protected virtual void ToPool(Message message)
