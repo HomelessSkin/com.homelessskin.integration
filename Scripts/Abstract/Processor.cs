@@ -39,8 +39,14 @@ namespace Integration
         [SerializeField]
         protected MessageType[] MessageTypes = new MessageType[]
         {
-            new MessageType { Name = "session_welcome" },
-            new MessageType { Name = "session_keepalive" },
+            new MessageType
+            {
+                Name = "session_welcome"
+            },
+            new MessageType
+            {
+                Name = "session_keepalive"
+            },
         };
 
         public void StartAuth()
@@ -97,11 +103,13 @@ namespace Integration
         }
 #endif
 
+        #region MESSAGE TYPE
         [Serializable]
         public class MessageType
         {
             public uint ID;
             public string Name;
         }
+        #endregion
     }
 }

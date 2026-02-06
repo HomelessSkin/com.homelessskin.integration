@@ -106,9 +106,11 @@ namespace Integration
         }
         public override void RequestTimeout(OuterInput input, Platform platform)
         {
+
         }
         public override void RequestBan(OuterInput input, Platform platform)
         {
+
         }
 
         protected override async Task SubscribeToEvent(string type, Platform platform)
