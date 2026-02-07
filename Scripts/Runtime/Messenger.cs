@@ -5,13 +5,15 @@ using Core;
 using Input;
 
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Integration
 {
     public class Messenger : MonoBehaviour
     {
         [SerializeField] int MaxChatCount = 100;
-        [SerializeField] Transform Content;
+        [SerializeField] VerticalLayoutGroup g;
+        [SerializeField] RectTransform Content;
         [SerializeField] GameObject MessagePrefab;
 
         List<Message> Pool = new List<Message>();
@@ -99,6 +101,8 @@ namespace Integration
             }
             else
                 message = Instantiate(MessagePrefab, Content, false).GetComponent<Message>();
+
+            LayoutRebuilder.ForceRebuildLayoutImmediate(Content);
 
             return message;
         }
