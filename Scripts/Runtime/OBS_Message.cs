@@ -1,6 +1,6 @@
 namespace Integration
 {
-    public class OBS_Message : Message
+    public class OBS_Message : ChatMessage
     {
 
     }

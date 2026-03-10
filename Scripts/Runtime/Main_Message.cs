@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace Integration
 {
-    public class Main_Message : Message
+    public class Main_Message : ChatMessage
     {
         [SerializeField] MenuButton DeleteButton;
         [SerializeField] MenuButton TimeoutButton;

@@ -10,7 +10,7 @@ using UnityEngine;
 
 namespace Integration
 {
-    public abstract class Message : MonoBehaviour
+    public abstract class ChatMessage : MonoBehaviour
     {
         [SerializeField] TMP_Text Content;
 

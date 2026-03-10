@@ -5,8 +5,6 @@ using Core;
 
 using Input;
 
-using Integration.JSON;
-
 using Unity.Entities;
 
 
@@ -35,7 +33,6 @@ namespace Integration
 
         [Header("Socket Messages")]
         [Space]
-        [SerializeField] bool LogMessageTypes = true;
         [SerializeField]
         protected MessageType[] MessageTypes = new MessageType[]
         {
@@ -67,19 +64,16 @@ namespace Integration
                 await Task.Delay(SubscriptionDelay);
             }
         }
-        public virtual void DetermineType(ref SocketMessage message)
-        {
-            if (LogMessageTypes)
-                Log.Info(this, $"{message.type} message received.");
-        }
 
         public abstract Task<string> Connect(Platform platform);
         public abstract void OnOpen(Platform platform);
         public abstract void OnPing(Platform platform);
+        public abstract void DetermineType(ref SocketMessage message, ref Platform platform);
         public abstract void Invoke(SocketMessage message, EntityManager manager);
         public abstract void RequestDeleteMessage(OuterInput input, Platform platform);
         public abstract void RequestTimeout(OuterInput input, Platform platform);
         public abstract void RequestBan(OuterInput input, Platform platform);
+        public abstract SocketMessage FromJson(string data);
 
         protected abstract Task SubscribeToEvent(string type, Platform platform);
 
@@ -111,5 +105,12 @@ namespace Integration
             public string Name;
         }
         #endregion
+    }
+
+    [Serializable]
+    public class SocketMessage
+    {
+        public string type;
+        public uint id;
     }
 }

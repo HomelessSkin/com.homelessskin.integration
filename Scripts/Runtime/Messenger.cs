@@ -12,12 +12,11 @@ namespace Integration
     public class Messenger : MonoBehaviour
     {
         [SerializeField] int MaxChatCount = 100;
-        [SerializeField] VerticalLayoutGroup g;
         [SerializeField] RectTransform Content;
         [SerializeField] GameObject MessagePrefab;
 
-        List<Message> Pool = new List<Message>();
-        List<Message> Messages = new List<Message>();
+        List<ChatMessage> Pool = new List<ChatMessage>();
+        List<ChatMessage> Messages = new List<ChatMessage>();
 
         public void ClearChat()
         {
@@ -26,14 +25,14 @@ namespace Integration
 
             Messages.Clear();
         }
-        public void OnMessage(OuterInput input, Command command)
+        public void OnMessage(OuterInput input)
         {
             var m = FromPool();
             m.Init(input);
 
             Messages.Add(m);
         }
-        public void OnDeleteMessage(OuterInput input, Command command)
+        public void OnDeleteMessage(OuterInput input)
         {
             for (int m = 0; m < Messages.Count; m++)
             {
@@ -50,7 +49,7 @@ namespace Integration
                 }
             }
         }
-        public void OnBan(OuterInput input, Command command)
+        public void OnBan(OuterInput input)
         {
             var toRemove = new List<int>();
             for (int m = 0; m < Messages.Count; m++)
@@ -70,7 +69,7 @@ namespace Integration
                 Messages.RemoveAt(toRemove[t]);
         }
 
-        protected virtual void ToPool(Message message)
+        protected virtual void ToPool(ChatMessage message)
         {
             StreamingSprites.RemoveRange(message.GetSmiles());
 
@@ -79,9 +78,9 @@ namespace Integration
 
             Pool.Add(message);
         }
-        protected virtual Message FromPool()
+        protected virtual ChatMessage FromPool()
         {
-            Message message;
+            ChatMessage message;
             if (Messages.Count >= MaxChatCount)
             {
                 message = Messages[0];
@@ -100,7 +99,7 @@ namespace Integration
                 Pool.RemoveAt(0);
             }
             else
-                message = Instantiate(MessagePrefab, Content, false).GetComponent<Message>();
+                message = Instantiate(MessagePrefab, Content, false).GetComponent<ChatMessage>();
 
             LayoutRebuilder.ForceRebuildLayoutImmediate(Content);
 

@@ -6,8 +6,6 @@ using Core;
 
 using Input;
 
-using Integration.JSON;
-
 using Unity.Entities;
 
 using UnityEngine;
@@ -51,31 +49,33 @@ namespace Integration
             UserBadges = await RefreshBadgeSet($"?broadcaster_id={platform.ChannelID}", platform.Token);
         }
         public override void OnPing(Platform platform) { }
-        public override void DetermineType(ref SocketMessage message)
+        public override void DetermineType(ref SocketMessage message, ref Platform platform)
         {
-            switch (message.metadata.message_type)
+            var mtw = message as SocketMessage_TW;
+            switch (mtw.metadata.message_type)
             {
-                case "session_welcome":
                 case "session_keepalive":
-                message.type = message.metadata.message_type;
+                message.type = mtw.metadata.message_type;
                 break;
+                case "session_welcome":
+                platform.SessionID = mtw.payload.session.id;
+                goto case "session_keepalive";
                 default:
-                message.type = message.metadata.message_type;
+                message.type = mtw.metadata.message_type;
                 break;
             }
-
-            base.DetermineType(ref message);
         }
         public override void Invoke(SocketMessage message, EntityManager manager)
         {
-            switch (message.metadata.subscription_type)
+            var mtw = message as SocketMessage_TW;
+            switch (mtw.metadata.subscription_type)
             {
                 case "channel.ban":
                 Sys.Add_M(new OuterInput
                 {
                     Title = "Ban",
                     Platform = "twitch",
-                    Nick = message.payload.@event.user_name,
+                    Nick = mtw.payload.@event.user_name,
                 },
                 manager);
                 break;
@@ -84,12 +84,12 @@ namespace Integration
                 {
                     Title = "Message",
                     Platform = "twitch",
-                    ID = message.payload.@event.message_id,
-                    UserID = message.payload.@event.chatter_user_id,
-                    Nick = message.payload.@event.chatter_user_name,
-                    NickColor = message.payload.@event.color,
-                    UserInput = ExtractChatMessage(message.payload.@event.message.fragments),
-                    Badges = ExtractBadges(message.payload.@event.badges),
+                    ID = mtw.payload.@event.message_id,
+                    UserID = mtw.payload.@event.chatter_user_id,
+                    Nick = mtw.payload.@event.chatter_user_name,
+                    NickColor = mtw.payload.@event.color,
+                    UserInput = ExtractChatMessage(mtw.payload.@event.message.fragments),
+                    Badges = ExtractBadges(mtw.payload.@event.badges),
                 },
                 manager);
                 break;
@@ -98,7 +98,7 @@ namespace Integration
                 {
                     Title = "Delete Message",
                     Platform = "twitch",
-                    ID = message.payload.@event.message_id,
+                    ID = mtw.payload.@event.message_id,
                 },
                 manager);
                 break;
@@ -185,6 +185,7 @@ namespace Integration
                     Log.Error(this, request.error);
             }
         }
+        public override SocketMessage FromJson(string data) => JsonUtility.FromJson<SocketMessage_TW>(data);
 
         protected async override Task SubscribeToEvent(string type, Platform platform)
         {
@@ -250,7 +251,7 @@ namespace Integration
 
             return list;
         }
-        protected virtual List<OuterInput.Icon> ExtractBadges(JSON.Badge[] badges)
+        protected virtual List<OuterInput.Icon> ExtractBadges(Badge[] badges)
         {
             var list = new List<OuterInput.Icon>()
             {
@@ -267,14 +268,14 @@ namespace Integration
                 list.Add(new OuterInput.Icon
                 {
                     Hash = hash,
-                    Index = StreamingSprites.GetSpriteIndex(hash, GetBadgeURI(badge.set_id, badge.id)),
+                    Index = StreamingSprites.GetSpriteIndex(hash, GetBadgeURL(badge.set_id, badge.id)),
                 });
             }
 
             return list;
         }
 
-        string GetBadgeURI(string set_id, string id)
+        string GetBadgeURL(string set_id, string id)
         {
             if (set_id == "subscriber")
             {
@@ -348,4 +349,42 @@ namespace Integration
         }
         #endregion
     }
+
+    #region JSON
+    public class SocketMessage_TW : SocketMessage
+    {
+        public Metadata metadata;
+        public Payload payload;
+    }
+
+    [Serializable]
+    public class Metadata
+    {
+        public string message_type;
+        public string subscription_type;
+    }
+
+    [Serializable]
+    public class Payload
+    {
+        public Session session;
+        public SocketEvent @event;
+    }
+
+    [Serializable]
+    public class SocketEvent
+    {
+        public string id;
+        public string message_id;
+        public string color;
+        public string chatter_user_id;
+        public string chatter_user_name;
+        public string user_id;
+        public string user_name;
+        public string user_input;
+        public Message message;
+        public Cheer cheer;
+        public Badge[] badges;
+    }
+    #endregion
 }

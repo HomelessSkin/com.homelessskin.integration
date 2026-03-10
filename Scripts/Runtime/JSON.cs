@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-using Input;
-
-namespace Integration.JSON
+namespace Integration
 {
     [Serializable]
     public class JWT
@@ -40,7 +38,6 @@ namespace Integration.JSON
     {
         public string token;
         public Channel channel;
-        public Reward[] data;
     }
 
     [Serializable]
@@ -62,17 +59,6 @@ namespace Integration.JSON
         public string private_channel_points;
         public string limited_chat;
         public string limited_private_chat;
-    }
-
-    [Serializable]
-    public class SocketMessage
-    {
-        public string type;
-
-        public uint id;
-        public Push push;
-        public Metadata metadata;
-        public Payload payload;
     }
 
     [Serializable]
@@ -285,40 +271,9 @@ namespace Integration.JSON
     }
 
     [Serializable]
-    public class Metadata
-    {
-        public string message_type;
-        public string subscription_type;
-    }
-
-    [Serializable]
-    public class Payload
-    {
-        public Session session;
-        public SocketEvent @event;
-    }
-
-    [Serializable]
     public class Session
     {
         public string id;
-    }
-
-    [Serializable]
-    public class SocketEvent
-    {
-        public string id;
-        public string message_id;
-        public string color;
-        public string chatter_user_id;
-        public string chatter_user_name;
-        public string user_id;
-        public string user_name;
-        public string user_input;
-        public Message message;
-        public Cheer cheer;
-        public Badge[] badges;
-        public Reward reward;
     }
 
     [Serializable]

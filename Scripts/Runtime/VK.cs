@@ -1,11 +1,10 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
 using Core;
 
 using Input;
-
-using Integration.JSON;
 
 using Unity.Entities;
 
@@ -52,20 +51,22 @@ namespace Integration
             }));
         }
         public override void OnPing(Platform platform) => platform.Socket.Send("{}");
-        public override void DetermineType(ref SocketMessage message)
+        public override void DetermineType(ref SocketMessage message, ref Platform platform)
         {
+            var mvk = message as SocketMessage_VK;
+
             if (message.id != 0u)
                 message.type = IDToType(message.id);
-            else if (message.push == null || message.push.pub == null)
+            else if (mvk.push == null || mvk.push.pub == null)
                 message.type = "session_keepalive";
             else
                 message.type = "notification";
-
-            base.DetermineType(ref message);
         }
         public override void Invoke(SocketMessage message, EntityManager manager)
         {
-            var data = message.push.pub.data;
+            var mvk = message as SocketMessage_VK;
+
+            var data = mvk.push.pub.data;
             switch (data.type)
             {
                 case "channel_chat_message_send":
@@ -112,6 +113,7 @@ namespace Integration
         {
 
         }
+        public override SocketMessage FromJson(string data) => JsonUtility.FromJson<SocketMessage_VK>(data);
 
         protected override async Task SubscribeToEvent(string type, Platform platform)
         {
@@ -147,7 +149,7 @@ namespace Integration
                     Log.Error(this, $"{request.error}");
             }
         }
-        protected virtual List<OuterInput.Part> ExtractChatMessage(JSON.Message message)
+        protected virtual List<OuterInput.Part> ExtractChatMessage(Message message)
         {
             var list = new List<OuterInput.Part>();
             var tasks = new List<Task>();
@@ -219,4 +221,12 @@ namespace Integration
             return list;
         }
     }
+
+    #region JSON
+    [Serializable]
+    public class SocketMessage_VK : SocketMessage
+    {
+        public Push push;
+    }
+    #endregion
 }
