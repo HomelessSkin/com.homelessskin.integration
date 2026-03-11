@@ -101,19 +101,7 @@ namespace Integration
                 break;
             }
         }
-        public override void RequestDeleteMessage(OuterInput input, Platform platform)
-        {
-
-        }
-        public override void RequestTimeout(OuterInput input, Platform platform)
-        {
-
-        }
-        public override void RequestBan(OuterInput input, Platform platform)
-        {
-
-        }
-        public override SocketMessage FromJson(string data) => JsonUtility.FromJson<SocketMessage_VK>(data);
+        public override SocketMessage MessageFromJson(string data) => JsonUtility.FromJson<SocketMessage_VK>(data);
 
         protected override async Task SubscribeToEvent(string type, Platform platform)
         {

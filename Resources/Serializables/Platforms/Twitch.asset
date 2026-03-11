@@ -26,7 +26,6 @@ MonoBehaviour:
   - channel.ban
   - channel.chat.message
   - channel.chat.message_delete
-  LogMessageTypes: 1
   MessageTypes:
   - ID: 792420933
     Name: session_welcome

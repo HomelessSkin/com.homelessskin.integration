@@ -20,7 +20,6 @@ MonoBehaviour:
   SubscriptionDelay: 100
   Events:
   - sub_chat
-  LogMessageTypes: 1
   MessageTypes:
   - ID: 792420933
     Name: session_welcome

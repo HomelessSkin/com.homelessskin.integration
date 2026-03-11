@@ -20,34 +20,10 @@ namespace Integration
         protected static string GetUsersURL = "https://api.twitch.tv/helix/users";
         protected static string EmoteURL = "https://static-cdn.jtvnw.net/emoticons/v2";
         protected static string BadgesURL = $"https://api.twitch.tv/helix/chat/badges";
-        protected static string ModerationURL = $"https://api.twitch.tv/helix/moderation/chat";
-        protected static string BanURL = $"https://api.twitch.tv/helix/moderation/bans";
 
         BadgesResponse GlobalBadges;
         BadgesResponse UserBadges;
 
-        public async override Task<string> Connect(Platform data)
-        {
-            using (var request = UnityWebRequest.Get(GetUsersURL + $"?login={data.Channel}"))
-            {
-                request.SetRequestHeader("Authorization", $"Bearer {data.Token}");
-                request.SetRequestHeader("Client-ID", AppID);
-
-                await request.SendWebRequest();
-
-                if (request.result == UnityWebRequest.Result.Success)
-                    return JsonUtility.FromJson<UserResponse>(request.downloadHandler.text).data[0].id;
-                else
-                    Log.Error(this, $"{request.error}");
-            }
-
-            return "";
-        }
-        public override async void OnOpen(Platform platform)
-        {
-            GlobalBadges = await RefreshBadgeSet("/global", platform.Token);
-            UserBadges = await RefreshBadgeSet($"?broadcaster_id={platform.ChannelID}", platform.Token);
-        }
         public override void OnPing(Platform platform) { }
         public override void DetermineType(ref SocketMessage message, ref Platform platform)
         {
@@ -104,92 +80,25 @@ namespace Integration
                 break;
             }
         }
-        public override async void RequestDeleteMessage(OuterInput input, Platform platform)
+        public override SocketMessage MessageFromJson(string data) => JsonUtility.FromJson<SocketMessage_TW>(data);
+
+        public override async void OnOpen(Platform platform)
         {
-            using (var request = UnityWebRequest.Delete($"{ModerationURL}" +
-                $"?broadcaster_id={platform.ChannelID}" +
-                $"&moderator_id={platform.ChannelID}" +
-                $"&message_id={input.ID}"))
-            {
-                request.SetRequestHeader("Authorization", $"Bearer {platform.Token}");
-                request.SetRequestHeader("Client-ID", AppID);
-
-                await request.SendWebRequest();
-
-                if (request.result == UnityWebRequest.Result.Success)
-                    Log.Info(this, $"Delete message {input.ID} success!");
-                else
-                    Log.Error(this, request.error);
-            }
+            GlobalBadges = await Get<BadgesResponse>($"{BadgesURL}/global", platform.Token);
+            UserBadges = await Get<BadgesResponse>($"{BadgesURL}?broadcaster_id={platform.ChannelID}", platform.Token);
         }
-        public override async void RequestTimeout(OuterInput input, Platform platform)
+        public override async Task<string> Connect(Platform platform)
         {
-            using (var request = UnityWebRequest.Post($"{BanURL}" +
-                $"?broadcaster_id={platform.ChannelID}" +
-                $"&moderator_id={platform.ChannelID}",
-                "",
-                "application/json"))
-            {
-                request.SetRequestHeader("Authorization", $"Bearer {platform.Token}");
-                request.SetRequestHeader("Client-ID", AppID);
+            var response = await Get<UserResponse>($"{GetUsersURL}?login={platform.Channel}", platform.Token);
+            if (response != null)
+                return response.data[0].id;
 
-                var data = JsonUtility.ToJson(new Timeout
-                {
-                    data = new TimeoutData
-                    {
-                        user_id = input.UserID,
-                        duration = 600
-                    }
-                });
-                var bodyRaw = System.Text.Encoding.UTF8.GetBytes(data);
-
-                request.uploadHandler = new UploadHandlerRaw(bodyRaw);
-                request.downloadHandler = new DownloadHandlerBuffer();
-
-                await request.SendWebRequest();
-
-                if (request.result == UnityWebRequest.Result.Success)
-                    Log.Info(this, $"Timeout User {input.UserID} success!");
-                else
-                    Log.Error(this, request.error);
-            }
+            return "";
         }
-        public override async void RequestBan(OuterInput input, Platform platform)
+
+        protected override async Task SubscribeToEvent(string type, Platform platform)
         {
-            using (var request = UnityWebRequest.Post($"{BanURL}" +
-                $"?broadcaster_id={platform.ChannelID}" +
-                $"&moderator_id={platform.ChannelID}",
-                "",
-                "application/json"))
-            {
-                request.SetRequestHeader("Authorization", $"Bearer {platform.Token}");
-                request.SetRequestHeader("Client-ID", AppID);
-
-                var data = JsonUtility.ToJson(new Ban
-                {
-                    data = new BanData
-                    {
-                        user_id = input.UserID,
-                    }
-                });
-                var bodyRaw = System.Text.Encoding.UTF8.GetBytes(data);
-
-                request.uploadHandler = new UploadHandlerRaw(bodyRaw);
-                request.downloadHandler = new DownloadHandlerBuffer();
-
-                await request.SendWebRequest();
-
-                if (request.result == UnityWebRequest.Result.Success)
-                    Log.Info(this, $"Ban User {input.UserID} success!");
-                else
-                    Log.Error(this, request.error);
-            }
-        }
-        public override SocketMessage FromJson(string data) => JsonUtility.FromJson<SocketMessage_TW>(data);
-
-        protected async override Task SubscribeToEvent(string type, Platform platform)
-        {
-            var data = JsonUtility.ToJson(new EventSubRequest
+            await Post(EventSubURL, platform.Token, new EventSubRequest
             {
                 type = type,
                 version = "1",
@@ -204,24 +113,8 @@ namespace Integration
                     session_id = $"{platform.SessionID}",
                 },
             });
-
-            using (var request = UnityWebRequest.Post(EventSubURL, "", "application/json"))
-            {
-                request.SetRequestHeader("Authorization", $"Bearer {platform.Token}");
-                request.SetRequestHeader("Client-Id", AppID);
-
-                var bodyRaw = System.Text.Encoding.UTF8.GetBytes(data);
-                request.uploadHandler = new UploadHandlerRaw(bodyRaw);
-                request.downloadHandler = new DownloadHandlerBuffer();
-
-                await request.SendWebRequest();
-
-                if (request.result == UnityWebRequest.Result.Success)
-                    Log.Info(this, $"Subscribed successfully to: {type} event");
-                else
-                    Log.Error(this, $"Failed to create subscription to: {type} event. With error: {request.error}");
-            }
         }
+
         protected virtual List<OuterInput.Part> ExtractChatMessage(Fragment[] fragments)
         {
             var list = new List<OuterInput.Part>();
@@ -302,52 +195,6 @@ namespace Integration
 
             return "";
         }
-        async Task<BadgesResponse> RefreshBadgeSet(string url, string token)
-        {
-            using (var request = UnityWebRequest.Get($"{BadgesURL}{url}"))
-            {
-                request.SetRequestHeader("Authorization", $"Bearer {token}");
-                request.SetRequestHeader("Client-ID", AppID);
-
-                await request.SendWebRequest();
-
-                if (request.result == UnityWebRequest.Result.Success)
-                {
-                    Log.Info(this, $"{url} Badge Set loaded successfully.");
-
-                    return JsonUtility.FromJson<BadgesResponse>(request.downloadHandler.text);
-                }
-                else
-                    Log.Error(this, request.error);
-            }
-
-            return null;
-        }
-
-        #region TIMEOUT
-        [Serializable]
-        class Timeout
-        {
-            public TimeoutData data;
-
-        }
-        [Serializable]
-        class TimeoutData
-        {
-            public string user_id;
-            public int duration;
-        }
-        [Serializable]
-        class Ban
-        {
-            public BanData data;
-        }
-        [Serializable]
-        class BanData
-        {
-            public string user_id;
-        }
-        #endregion
     }
 
     #region JSON

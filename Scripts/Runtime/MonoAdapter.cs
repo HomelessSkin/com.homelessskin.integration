@@ -1,10 +1,9 @@
 using System;
 using System.Collections.Concurrent;
+using System.Threading.Tasks;
 using System.Web;
 
 using Core;
-
-using Input;
 
 using TMPro;
 
@@ -20,7 +19,7 @@ namespace Integration
 {
     public class MonoAdapter : MonoBehaviour
     {
-        [SerializeField] string Platform;
+        [SerializeField] string _PlatformName;
         [SerializeField] Adapter _Adapter;
         #region ADAPTER
         [Serializable]
@@ -39,8 +38,9 @@ namespace Integration
             [SerializeField] bool PrintRawSocket = false;
 #endif
 
+            public Processor Processor => _Processor;
             [Space]
-            [SerializeField] Processor Processor;
+            [SerializeField] Processor _Processor;
 
             [Space]
             [SerializeField] Indicator Indicator;
@@ -49,21 +49,21 @@ namespace Integration
 
             protected EntityManager EntityManager;
 
-            public Platform _Platform => Platform;
-            protected Platform Platform;
+            public Platform Platform => _Platform;
+            protected Platform _Platform;
 
             protected ConcurrentQueue<SocketMessage> SocketMessages = new ConcurrentQueue<SocketMessage>();
 
-            public void StartAuth() => Processor.StartAuth();
+            public void StartAuth() => _Processor.StartAuth();
             public void Load()
             {
                 EntityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
 
-                var platform = Load(Processor.name);
+                var platform = Load(_Processor.name);
                 if (string.IsNullOrEmpty(platform))
                     return;
 
-                Platform = JsonUtility.FromJson<Platform>(platform);
+                _Platform = JsonUtility.FromJson<Platform>(platform);
             }
             public void Reset()
             {
@@ -72,9 +72,9 @@ namespace Integration
                 {
                     Log.Warning(this, "Token Input is invalid!");
 
-                    if (!string.IsNullOrEmpty(Platform.Token))
+                    if (!string.IsNullOrEmpty(_Platform.Token))
                     {
-                        token = Platform.Token;
+                        token = _Platform.Token;
 
                         Log.Warning(this, "Using saved Token!");
                     }
@@ -91,9 +91,9 @@ namespace Integration
                 {
                     Log.Warning(this, "Channel Input is empty!");
 
-                    if (!string.IsNullOrEmpty(Platform.Channel))
+                    if (!string.IsNullOrEmpty(_Platform.Channel))
                     {
-                        channel = Platform.Channel;
+                        channel = _Platform.Channel;
 
                         Log.Warning(this, "Using saved Channel Name!");
                     }
@@ -105,78 +105,80 @@ namespace Integration
                     }
                 }
 
-                if (Platform == null)
-                    Platform = new Platform();
+                if (_Platform == null)
+                    _Platform = new Platform();
 
-                Platform.Name = Processor.name;
-                Platform.Token = token;
-                Platform.Channel = channel;
+                _Platform.Name = _Processor.name;
+                _Platform.Token = token;
+                _Platform.Channel = channel;
 
-                Save(Platform);
+                Save(_Platform);
                 Connect();
             }
             public async void Connect()
             {
-                Log.Info(this, $"Platform {Processor.name} is trying to connect...");
+                Log.Info(this, $"Platform {_Processor.name} is trying to connect...");
 
                 if (!VerifyPlatform())
                     return;
 
-                Platform.ChannelID = await Processor.Connect(Platform);
-                if (!string.IsNullOrEmpty(Platform.ChannelID))
-                    InitializeSocket(Processor.GetSocketURL());
+                _Platform.ChannelID = await _Processor.Connect(_Platform);
+                if (!string.IsNullOrEmpty(_Platform.ChannelID))
+                    InitializeSocket(_Processor.GetSocketURL());
             }
             public void Disconnect()
             {
-                if (Platform != null &&
-                     Platform.Socket != null &&
-                     Platform.Socket.IsAlive)
-                    Platform.Socket.Close();
+                if (_Platform != null &&
+                     _Platform.Socket != null &&
+                     _Platform.Socket.IsAlive)
+                    _Platform.Socket.Close();
             }
             public void Invoke()
             {
                 while (SocketMessages.TryDequeue(out var message))
                 {
                     Indicator?.Refresh();
-                    Processor.DetermineType(ref message, ref Platform);
+                    _Processor.DetermineType(ref message, ref _Platform);
 
                     switch (message.type)
                     {
                         case "session_keepalive":
-                        Processor.OnPing(Platform);
+                        _Processor.OnPing(_Platform);
                         break;
                         case "session_welcome":
-                        Processor.SubscribeToEvents(Platform);
+                        _Processor.SubscribeToEvents(_Platform);
                         break;
                         case "notification":
-                        Processor.Invoke(message, EntityManager);
+                        _Processor.Invoke(message, EntityManager);
                         break;
                     }
                 }
             }
-            public void RequestDeleteMessage(OuterInput input) => Processor.RequestDeleteMessage(input, Platform);
-            public void RequestTimeout(OuterInput input) => Processor.RequestTimeout(input, Platform);
-            public void RequestBan(OuterInput input) => Processor.RequestBan(input, Platform);
+
+            public async Task<T> Get<T>(string uri) where T : class => await _Processor.Get<T>(uri, _Platform.Token);
+            public async Task<bool> Post(string uri, object obj) => await _Processor.Post(uri, _Platform.Token, obj);
+            public async Task<bool> Delete(string uri) => await _Processor.Delete(uri, _Platform.Token);
+            public async Task<bool> Patch<T>(string uri, T obj) where T : class => await _Processor.Patch<T>(uri, _Platform.Token, obj);
 
             void InitializeSocket(string url)
             {
-                Log.Info(this, $"{Platform.Name} Socket Initialization.");
+                Log.Info(this, $"{_Platform.Name} Socket Initialization.");
 
-                if (Platform.Socket != null)
-                    Platform.Socket.Close();
+                if (_Platform.Socket != null)
+                    _Platform.Socket.Close();
 
-                Platform.Socket = new WebSocket(url);
-                Platform.Socket.SslConfiguration.EnabledSslProtocols = System.Security.Authentication.SslProtocols.Tls12;
-                Platform.Socket.SslConfiguration.ServerCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
+                _Platform.Socket = new WebSocket(url);
+                _Platform.Socket.SslConfiguration.EnabledSslProtocols = System.Security.Authentication.SslProtocols.Tls12;
+                _Platform.Socket.SslConfiguration.ServerCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
 
-                Platform.Socket.OnOpen += OnOpen;
-                Platform.Socket.OnMessage += OnMessage;
-                Platform.Socket.OnClose += OnClose;
-                Platform.Socket.OnError += OnError;
+                _Platform.Socket.OnOpen += OnOpen;
+                _Platform.Socket.OnMessage += OnMessage;
+                _Platform.Socket.OnClose += OnClose;
+                _Platform.Socket.OnError += OnError;
 
-                Platform.Socket.Connect();
+                _Platform.Socket.Connect();
             }
-            void OnOpen(object sender, EventArgs e) => Processor.OnOpen(Platform);
+            void OnOpen(object sender, EventArgs e) => _Processor.OnOpen(_Platform);
             void OnMessage(object sender, MessageEventArgs e)
             {
 #if UNITY_EDITOR
@@ -184,30 +186,30 @@ namespace Integration
                     Debug.Log(e.Data);
 #endif
 
-                SocketMessages.Enqueue(Processor.FromJson(e.Data));
+                SocketMessages.Enqueue(_Processor.MessageFromJson(e.Data));
             }
             void OnClose(object sender, CloseEventArgs e) => Log.Warning(this, $"{e.Reason} {e.Code}");
             void OnError(object sender, ErrorEventArgs e) => Log.Error(this, $"{e.Message}");
 
             bool VerifyPlatform()
             {
-                if (Platform == null)
+                if (_Platform == null)
                 {
-                    Log.Warning(this, $"Platform {Processor.name} doesn't exist!");
+                    Log.Warning(this, $"Platform {_Processor.name} doesn't exist!");
 
                     return false;
                 }
 
-                if (string.IsNullOrEmpty(Platform.Token))
+                if (string.IsNullOrEmpty(_Platform.Token))
                 {
-                    Log.Warning(this, $"Platform {Processor.name} doesn't have a User Token!");
+                    Log.Warning(this, $"Platform {_Processor.name} doesn't have a User Token!");
 
                     return false;
                 }
 
-                if (string.IsNullOrEmpty(Platform.Channel))
+                if (string.IsNullOrEmpty(_Platform.Channel))
                 {
-                    Log.Warning(this, $"Platform {Processor.name} doesn't have a Channel!");
+                    Log.Warning(this, $"Platform {_Processor.name} doesn't have a Channel!");
 
                     return false;
                 }
@@ -226,27 +228,21 @@ namespace Integration
         {
             _Adapter.Invoke();
         }
+        void OnDestroy()
+        {
+            _Adapter?.Disconnect();
+        }
 
         public void StartAuth() => _Adapter.StartAuth();
-        public void Submit(int type) => _Adapter.Reset();
-        public void Connect(int type) => _Adapter.Connect();
-        public void DeleteMessageButton(OuterInput input)
-        {
-            if (input.Platform == Platform)
-                _Adapter.RequestDeleteMessage(input);
-        }
-        public void TimeoutButton(OuterInput input)
-        {
-            if (input.Platform == Platform)
-                _Adapter.RequestTimeout(input);
-        }
-        public void BanButton(OuterInput input)
-        {
-            if (input.Platform == Platform)
-                _Adapter.RequestBan(input);
-        }
+        public void Submit() => _Adapter.Reset();
+        public void Connect() => _Adapter.Connect();
 
-        public Platform GetPlatformData() => _Adapter._Platform;
+        public Platform GetPlatform() => _Adapter.Platform;
+
+        public async Task<T> Get<T>(string uri) where T : class => await _Adapter.Get<T>(uri);
+        public async Task<bool> Post(string uri, object obj) => await _Adapter.Post(uri, obj);
+        public async Task<bool> Delete(string uri) => await _Adapter.Delete(uri);
+        public async Task<bool> Patch<T>(string uri, T obj) where T : class => await _Adapter.Patch<T>(uri, obj);
     }
 
     #region PLATFORM
