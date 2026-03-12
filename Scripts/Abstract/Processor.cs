@@ -86,33 +86,6 @@ namespace Integration
 
             return null;
         }
-        public async Task<bool> Post(string uri, string bearer, object obj)
-        {
-            using (var request = UnityWebRequest.Post(uri, "", "application/json"))
-            {
-                request.SetRequestHeader("Authorization", $"Bearer {bearer}");
-                request.SetRequestHeader("Client-ID", AppID);
-
-                var data = JsonUtility.ToJson(obj);
-                var bodyRaw = System.Text.Encoding.UTF8.GetBytes(data);
-
-                request.uploadHandler = new UploadHandlerRaw(bodyRaw);
-                request.downloadHandler = new DownloadHandlerBuffer();
-
-                await request.SendWebRequest();
-
-                if (request.result == UnityWebRequest.Result.Success)
-                {
-                    Log.Info(this, $"{obj.GetType().FullName} has been posted.");
-
-                    return true;
-                }
-                else
-                    Log.Error(this, request.error);
-            }
-
-            return false;
-        }
         public async Task<bool> Delete(string uri, string bearer)
         {
             using (var request = UnityWebRequest.Delete(uri))
@@ -134,7 +107,34 @@ namespace Integration
 
             return false;
         }
-        public async Task<bool> Patch<T>(string uri, string bearer, T obj) where T : class
+        public async Task<string> Post(string uri, string bearer, object obj)
+        {
+            using (var request = UnityWebRequest.Post(uri, "", "application/json"))
+            {
+                request.SetRequestHeader("Authorization", $"Bearer {bearer}");
+                request.SetRequestHeader("Client-ID", AppID);
+
+                var data = JsonUtility.ToJson(obj);
+                var bodyRaw = System.Text.Encoding.UTF8.GetBytes(data);
+
+                request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+                request.downloadHandler = new DownloadHandlerBuffer();
+
+                await request.SendWebRequest();
+
+                if (request.result == UnityWebRequest.Result.Success)
+                {
+                    Log.Info(this, $"{obj.GetType().FullName} has been posted.");
+
+                    return request.downloadHandler.text;
+                }
+                else
+                    Log.Error(this, request.error);
+            }
+
+            return "";
+        }
+        public async Task<string> Patch<T>(string uri, string bearer, T obj) where T : class
         {
             using (var request = new UnityWebRequest(uri, "PATCH"))
             {
@@ -153,13 +153,13 @@ namespace Integration
                 {
                     Log.Info(this, $"{obj.GetType().FullName} has been patched.");
 
-                    return true;
+                    return request.downloadHandler.text;
                 }
                 else
                     Log.Error(this, request.error);
             }
 
-            return false;
+            return "";
         }
 
         public abstract void OnOpen(Platform platform);

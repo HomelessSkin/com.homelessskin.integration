@@ -9,7 +9,6 @@ using Input;
 using Unity.Entities;
 
 using UnityEngine;
-using UnityEngine.Networking;
 
 namespace Integration
 {
@@ -25,17 +24,9 @@ namespace Integration
 
         public override async Task<string> Connect(Platform platform)
         {
-            using (var request = UnityWebRequest.Get(EntryPath + "/v1/websocket/token"))
-            {
-                request.SetRequestHeader("Authorization", $"Bearer {platform.Token}");
-
-                await request.SendWebRequest();
-
-                if (request.result == UnityWebRequest.Result.Success)
-                    return JsonUtility.FromJson<JWT>(request.downloadHandler.text).data.token;
-                else
-                    Log.Error(this, $"{request.error}");
-            }
+            var jwt = await Get<JWT>($"{EntryPath}/v1/websocket/token", platform.Token);
+            if (jwt != null)
+                return jwt.data.token;
 
             return "";
         }
@@ -105,37 +96,21 @@ namespace Integration
 
         protected override async Task SubscribeToEvent(string type, Platform platform)
         {
-            using (var request = UnityWebRequest.Get(EntryPath +
-                $"/v1/channel" +
-                $"?channel_url={platform.Channel.ToLower()}"))
+            var response = await Get<ChannelsResponse>($"{EntryPath}/v1/channel?channel_url={platform.Channel.ToLower()}", platform.Token);
+            if (response == null)
+                return;
+
+            var message = new SubMessage { id = type.ToUint() };
+
+            switch (type)
             {
-                request.SetRequestHeader("Authorization", $"Bearer {platform.Token}");
-                request.downloadHandler = new DownloadHandlerBuffer();
-
-                await request.SendWebRequest();
-
-                if (request.result == UnityWebRequest.Result.Success)
-                {
-                    var channel = JsonUtility.FromJson<ChannelsResponse>(request.downloadHandler.text).data.channel;
-
-                    var message = new SubMessage
-                    {
-                        id = type.ToUint(),
-                    };
-
-                    switch (type)
-                    {
-                        case "sub_chat":
-                        message.subscribe = new Sub { channel = $"{channel.web_socket_channels.chat}" };
-                        break;
-                    }
-
-                    Log.Info(this, $"Sending subscription to channel: {message.subscribe.channel}");
-                    platform.Socket.Send(JsonUtility.ToJson(message));
-                }
-                else
-                    Log.Error(this, $"{request.error}");
+                case "sub_chat":
+                message.subscribe = new Sub { channel = $"{response.data.channel.web_socket_channels.chat}" };
+                break;
             }
+
+            Log.Info(this, $"Sending subscription to channel: {message.subscribe.channel}");
+            platform.Socket.Send(JsonUtility.ToJson(message));
         }
         protected virtual List<OuterInput.Part> ExtractChatMessage(Message message)
         {

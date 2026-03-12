@@ -156,9 +156,9 @@ namespace Integration
             }
 
             public async Task<T> Get<T>(string uri) where T : class => await _Processor.Get<T>(uri, _Platform.Token);
-            public async Task<bool> Post(string uri, object obj) => await _Processor.Post(uri, _Platform.Token, obj);
             public async Task<bool> Delete(string uri) => await _Processor.Delete(uri, _Platform.Token);
-            public async Task<bool> Patch<T>(string uri, T obj) where T : class => await _Processor.Patch<T>(uri, _Platform.Token, obj);
+            public async Task<string> Post(string uri, object obj) => await _Processor.Post(uri, _Platform.Token, obj);
+            public async Task<string> Patch<T>(string uri, T obj) where T : class => await _Processor.Patch<T>(uri, _Platform.Token, obj);
 
             void InitializeSocket(string url)
             {
@@ -240,9 +240,9 @@ namespace Integration
         public Platform GetPlatform() => _Adapter.Platform;
 
         public async Task<T> Get<T>(string uri) where T : class => await _Adapter.Get<T>(uri);
-        public async Task<bool> Post(string uri, object obj) => await _Adapter.Post(uri, obj);
         public async Task<bool> Delete(string uri) => await _Adapter.Delete(uri);
-        public async Task<bool> Patch<T>(string uri, T obj) where T : class => await _Adapter.Patch<T>(uri, obj);
+        public async Task<string> Patch<T>(string uri, T obj) where T : class => await _Adapter.Patch<T>(uri, obj);
+        public async Task<string> Post(string uri, object obj) => await _Adapter.Post(uri, obj);
     }
 
     #region PLATFORM
