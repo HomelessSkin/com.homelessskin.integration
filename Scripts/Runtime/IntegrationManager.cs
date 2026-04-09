@@ -53,94 +53,104 @@ namespace Integration
         #endregion
 
         [Space]
-        [SerializeField] StreamingSpritesData Smiles;
-
+        [SerializeField] protected Chat _Chat;
         #region CHAT
-        [Space]
-        [SerializeField] protected MonoAdapter VKAdapter;
-        [SerializeField] protected MonoAdapter TwitchAdapter;
-
-        [Space]
-        [SerializeField] protected Messenger MainMessenger;
-        [SerializeField] protected Messenger OBSMessenger;
-
-        protected string TwitchModerationURL = $"https://api.twitch.tv/helix/moderation/chat";
-        protected string TwitchBanURL = $"https://api.twitch.tv/helix/moderation/bans";
-
-        public async void DeleteMessage(OuterInput input)
+        [Serializable]
+        protected class Chat
         {
-            switch (input.Platform)
+            protected string TwitchModerationURL = $"https://api.twitch.tv/helix/moderation/chat";
+            protected string TwitchBanURL = $"https://api.twitch.tv/helix/moderation/bans";
+
+            [Space]
+            public MonoAdapter VKAdapter;
+            public MonoAdapter TwitchAdapter;
+
+            [Space]
+            public Messenger MainMessenger;
+            public Messenger OBSMessenger;
+
+            [Space]
+            public StreamingSpritesData Smiles;
+
+            public async void DeleteMessage(OuterInput input)
             {
-                case "vk":
+                switch (input.Platform)
                 {
-                    MainMessenger.OnDeleteMessage(input);
-                    OBSMessenger.OnDeleteMessage(input);
+                    case "vk":
+                    {
+                        MainMessenger.OnDeleteMessage(input);
+                        OBSMessenger.OnDeleteMessage(input);
+                    }
+                    break;
+                    case "twitch":
+                    {
+                        var platform = TwitchAdapter.GetPlatform();
+                        await TwitchAdapter.Delete($"{TwitchModerationURL}?broadcaster_id={platform.ChannelID}&moderator_id={platform.ChannelID}&message_id={input.ID}");
+                    }
+                    break;
                 }
-                break;
-                case "twitch":
-                {
-                    var platform = TwitchAdapter.GetPlatform();
-                    await TwitchAdapter.Delete($"{TwitchModerationURL}?broadcaster_id={platform.ChannelID}&moderator_id={platform.ChannelID}&message_id={input.ID}");
-                }
-                break;
             }
-        }
-        public async void TimeOut(OuterInput input)
-        {
-            switch (input.Platform)
+            public async void TimeOut(OuterInput input)
             {
-                case "vk":
+                switch (input.Platform)
                 {
+                    case "vk":
+                    {
 
-                }
-                break;
-                case "twitch":
-                {
-                    var platform = TwitchAdapter.GetPlatform();
-                    await TwitchAdapter.Post($"{TwitchBanURL}?broadcaster_id={platform.ChannelID}&moderator_id={platform.ChannelID}",
-                                new TwitchTimeout
-                                {
-                                    data = new TwitchTimeoutData
+                    }
+                    break;
+                    case "twitch":
+                    {
+                        var platform = TwitchAdapter.GetPlatform();
+                        await TwitchAdapter.Post($"{TwitchBanURL}?broadcaster_id={platform.ChannelID}&moderator_id={platform.ChannelID}",
+                                    new TwitchTimeout
                                     {
-                                        user_id = input.UserID,
-                                        duration = 600
-                                    }
-                                });
+                                        data = new TwitchTimeoutData
+                                        {
+                                            user_id = input.UserID,
+                                            duration = 600
+                                        }
+                                    });
+                    }
+                    break;
                 }
-                break;
             }
-        }
-        public async void Ban(OuterInput input)
-        {
-            switch (input.Platform)
+            public async void Ban(OuterInput input)
             {
-                case "vk":
+                switch (input.Platform)
                 {
+                    case "vk":
+                    {
 
-                }
-                break;
-                case "twitch":
-                {
-                    var platform = TwitchAdapter.GetPlatform();
-                    await TwitchAdapter.Post($"{TwitchBanURL}?broadcaster_id={platform.ChannelID}&moderator_id={platform.ChannelID}",
-                        new TwitchBan
-                        {
-                            data = new TwitchBanData
+                    }
+                    break;
+                    case "twitch":
+                    {
+                        var platform = TwitchAdapter.GetPlatform();
+                        await TwitchAdapter.Post($"{TwitchBanURL}?broadcaster_id={platform.ChannelID}&moderator_id={platform.ChannelID}",
+                            new TwitchBan
                             {
-                                user_id = input.UserID
-                            }
-                        });
+                                data = new TwitchBanData
+                                {
+                                    user_id = input.UserID
+                                }
+                            });
+                    }
+                    break;
                 }
-                break;
             }
         }
+
+        public void DeleteMessage(OuterInput input) => _Chat.DeleteMessage(input);
+        public void TimeOut(OuterInput input) => _Chat.TimeOut(input);
+        public void Ban(OuterInput input) => _Chat.Ban(input);
         #endregion
 
         protected override void Awake()
         {
             base.Awake();
 
-            StreamingSprites.Prepare(Smiles);
+            StreamingSprites.Prepare(_Chat.Smiles);
             Log.AddReadListener(RenderMainCanvas);
         }
 
