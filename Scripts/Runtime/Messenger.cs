@@ -4,46 +4,55 @@ using Core;
 
 using Input;
 
+using UI;
+
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace Integration
 {
     public class Messenger : MonoBehaviour
     {
-        [SerializeField] int MaxChatCount = 100;
-        [SerializeField] RectTransform Content;
+        [SerializeField] Scroll Scroll;
         [SerializeField] GameObject MessagePrefab;
 
-        List<ChatMessage> Pool = new List<ChatMessage>();
-        List<ChatMessage> Messages = new List<ChatMessage>();
+        void Start()
+        {
+            Scroll.Init(MessagePrefab);
+        }
 
         public void ClearChat()
         {
-            for (int m = 0; m < Messages.Count; m++)
-                ToPool(Messages[m]);
-
-            Messages.Clear();
+            var view = Scroll.GetView();
+            for (int m = 0; m < view.Count; m++)
+                Scroll.ToPool(m);
         }
+
+        protected virtual bool FromPool(out RectTransform t) => Scroll.TryGetFromPool(out t);
+
+        #region OUTER INPUT
         public void OnMessage(OuterInput input)
         {
-            var m = FromPool();
-            m.Init(input);
+            if (FromPool(out var m))
+            {
+                m.GetComponent<ChatMessage>().Init(input);
 
-            Messages.Add(m);
+                Scroll.ToView(m);
+            }
         }
         public void OnDeleteMessage(OuterInput input)
         {
-            for (int m = 0; m < Messages.Count; m++)
+            var view = Scroll.GetView();
+            for (int v = 0; v < view.Count; v++)
             {
-                var message = Messages[m];
+                var transform = view[v];
+                var message = transform.GetComponent<ChatMessage>();
                 var m_Input = message.GetInput();
                 if (m_Input.Platform == input.Platform &&
                       m_Input.ID == input.ID)
                 {
-                    ToPool(message);
+                    StreamingSprites.RemoveRange(message.GetSmiles());
 
-                    Messages.RemoveAt(m);
+                    Scroll.ToPool(v);
 
                     break;
                 }
@@ -52,58 +61,24 @@ namespace Integration
         public void OnBan(OuterInput input)
         {
             var toRemove = new List<int>();
-            for (int m = 0; m < Messages.Count; m++)
+            var view = Scroll.GetView();
+            for (int m = 0; m < view.Count; m++)
             {
-                var message = Messages[m];
+                var transform = view[m];
+                var message = transform.GetComponent<ChatMessage>();
                 var m_Input = message.GetInput();
                 if (m_Input.Platform == input.Platform &&
                       m_Input.Nick == input.Nick)
                 {
-                    ToPool(message);
+                    StreamingSprites.RemoveRange(message.GetSmiles());
 
                     toRemove.Add(m);
                 }
             }
 
-            for (int t = toRemove.Count - 1; t >= 0; t--)
-                Messages.RemoveAt(toRemove[t]);
+            for (int t = view.Count - 1; t >= 0; t--)
+                Scroll.ToPool(toRemove[t]);
         }
-
-        protected virtual void ToPool(ChatMessage message)
-        {
-            StreamingSprites.RemoveRange(message.GetSmiles());
-
-            message.transform.SetParent(null);
-            message.gameObject.SetActive(false);
-
-            Pool.Add(message);
-        }
-        protected virtual ChatMessage FromPool()
-        {
-            ChatMessage message;
-            if (Messages.Count >= MaxChatCount)
-            {
-                message = Messages[0];
-
-                message.transform.SetParent(null);
-                message.transform.SetParent(Content);
-
-                Messages.RemoveAt(0);
-            }
-            else if (Pool.Count > 0)
-            {
-                message = Pool[0];
-                message.transform.SetParent(Content);
-                message.gameObject.SetActive(true);
-
-                Pool.RemoveAt(0);
-            }
-            else
-                message = Instantiate(MessagePrefab, Content, false).GetComponent<ChatMessage>();
-
-            LayoutRebuilder.ForceRebuildLayoutImmediate(Content);
-
-            return message;
-        }
+        #endregion
     }
 }
