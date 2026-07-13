@@ -9,7 +9,6 @@ using Input;
 using Unity.Entities;
 
 using UnityEngine;
-using UnityEngine.Networking;
 
 namespace Integration
 {
