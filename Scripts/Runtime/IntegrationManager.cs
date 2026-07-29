@@ -18,8 +18,9 @@ namespace Integration
         [Serializable]
         protected class Chat
         {
-            protected string TwitchModerationURL = $"https://api.twitch.tv/helix/moderation/chat";
-            protected string TwitchBanURL = $"https://api.twitch.tv/helix/moderation/bans";
+            string TwitchMessagesURL = $"https://api.twitch.tv/helix/chat/messages";
+            string TwitchModerationURL = $"https://api.twitch.tv/helix/moderation/chat";
+            string TwitchBanURL = $"https://api.twitch.tv/helix/moderation/bans";
 
             [Space]
             public MonoAdapter VKAdapter;
@@ -32,6 +33,24 @@ namespace Integration
             [Space]
             public StreamingSpritesData Smiles;
 
+            public void SendMessage(string[] command)
+            {
+                var message = "";
+                for (int c = 1; c < command.Length; c++)
+                    message += $"{command[c]} ";
+
+                SendMessage(message);
+            }
+            public async void SendMessage(string message)
+            {
+                var platform = TwitchAdapter.GetPlatform();
+                await TwitchAdapter.Post($"{TwitchMessagesURL}", new TwitchMessage
+                {
+                    broadcaster_id = platform.ChannelID,
+                    sender_id = platform.ChannelID,
+                    message = message
+                });
+            }
             public async void DeleteMessage(OuterInput input)
             {
                 switch (input.Platform)
@@ -101,6 +120,7 @@ namespace Integration
             }
         }
 
+        public void SendPlatformMessage(string[] command) => _Chat.SendMessage(command);
         public void DeleteMessage(OuterInput input) => _Chat.DeleteMessage(input);
         public void TimeOut(OuterInput input) => _Chat.TimeOut(input);
         public void Ban(OuterInput input) => _Chat.Ban(input);
@@ -113,7 +133,14 @@ namespace Integration
             StreamingSprites.Prepare(_Chat.Smiles);
         }
 
-        #region TWITCH TIMEOUT
+        #region TWITCH
+        [Serializable]
+        class TwitchMessage
+        {
+            public string broadcaster_id;
+            public string sender_id;
+            public string message;
+        }
         [Serializable]
         class TwitchTimeout
         {

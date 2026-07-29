@@ -675,6 +675,10 @@ PrefabInstance:
       propertyPath: 'Texts.Array.data[0]'
       value: 
       objectReference: {fileID: 0}
+    - target: {fileID: 1844537677343874242, guid: 9a2278ec408a9a1408aceb663facccfd, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 1888688010666473009, guid: 9a2278ec408a9a1408aceb663facccfd, type: 3}
       propertyPath: m_Sprite
       value: 
@@ -795,7 +799,8 @@ PrefabInstance:
       propertyPath: m_Name
       value: Delete
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 1844537677343874242, guid: 9a2278ec408a9a1408aceb663facccfd, type: 3}
     m_RemovedGameObjects:
     - {fileID: 4536795306541021758, guid: 9a2278ec408a9a1408aceb663facccfd, type: 3}
     - {fileID: 4156499588371102547, guid: 9a2278ec408a9a1408aceb663facccfd, type: 3}
@@ -863,7 +868,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 6279589682938057943}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d3d370ef8dc291d4dba24c46932e18c2, type: 3}
+  m_Script: {fileID: 11500000, guid: 5d7342a0a0d189b4ba2e1bd2aa051d8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1001 &6595043045649357291
@@ -1006,7 +1011,8 @@ PrefabInstance:
       propertyPath: m_Name
       value: Timeout
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 1844537677343874242, guid: 9a2278ec408a9a1408aceb663facccfd, type: 3}
     m_RemovedGameObjects:
     - {fileID: 4536795306541021758, guid: 9a2278ec408a9a1408aceb663facccfd, type: 3}
     - {fileID: 4156499588371102547, guid: 9a2278ec408a9a1408aceb663facccfd, type: 3}
@@ -1053,7 +1059,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 3626102926889290184}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d3d370ef8dc291d4dba24c46932e18c2, type: 3}
+  m_Script: {fileID: 11500000, guid: 5d7342a0a0d189b4ba2e1bd2aa051d8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!114 &7546963507789338043 stripped
@@ -1217,7 +1223,8 @@ PrefabInstance:
       propertyPath: m_Name
       value: Ban
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 1844537677343874242, guid: 9a2278ec408a9a1408aceb663facccfd, type: 3}
     m_RemovedGameObjects:
     - {fileID: 4536795306541021758, guid: 9a2278ec408a9a1408aceb663facccfd, type: 3}
     - {fileID: 4156499588371102547, guid: 9a2278ec408a9a1408aceb663facccfd, type: 3}
@@ -1239,7 +1246,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 693779379264285605}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d3d370ef8dc291d4dba24c46932e18c2, type: 3}
+  m_Script: {fileID: 11500000, guid: 5d7342a0a0d189b4ba2e1bd2aa051d8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1 &693779379264285605 stripped
