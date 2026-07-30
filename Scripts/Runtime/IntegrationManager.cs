@@ -33,14 +33,6 @@ namespace Integration
             [Space]
             public StreamingSpritesData Smiles;
 
-            public void SendMessage(string[] command)
-            {
-                var message = "";
-                for (int c = 1; c < command.Length; c++)
-                    message += $"{command[c]} ";
-
-                SendMessage(message);
-            }
             public async void SendMessage(string message)
             {
                 var platform = TwitchAdapter.GetPlatform();
@@ -49,6 +41,19 @@ namespace Integration
                     broadcaster_id = platform.ChannelID,
                     sender_id = platform.ChannelID,
                     message = message
+                });
+            }
+            public async void SendMessage(OuterInput input)
+            {
+                if (input.UserInput == null || input.UserInput.Count == 0)
+                    return;
+
+                var platform = TwitchAdapter.GetPlatform();
+                await TwitchAdapter.Post($"{TwitchMessagesURL}", new TwitchMessage
+                {
+                    broadcaster_id = platform.ChannelID,
+                    sender_id = platform.ChannelID,
+                    message = $"{input.UserInput[0].Message?.Content}"
                 });
             }
             public async void DeleteMessage(OuterInput input)
@@ -120,7 +125,8 @@ namespace Integration
             }
         }
 
-        public void SendPlatformMessage(string[] command) => _Chat.SendMessage(command);
+        public void SendPlatformMessage(string message) => _Chat.SendMessage(message);
+        public void SendPlatformMessage(OuterInput input) => _Chat.SendMessage(input);
         public void DeleteMessage(OuterInput input) => _Chat.DeleteMessage(input);
         public void TimeOut(OuterInput input) => _Chat.TimeOut(input);
         public void Ban(OuterInput input) => _Chat.Ban(input);

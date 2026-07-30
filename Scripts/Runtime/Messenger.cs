@@ -76,7 +76,7 @@ namespace Integration
                 }
             }
 
-            for (int t = view.Count - 1; t >= 0; t--)
+            for (int t = toRemove.Count - 1; t >= 0; t--)
                 Scroll.ToPool(toRemove[t]);
         }
         #endregion
