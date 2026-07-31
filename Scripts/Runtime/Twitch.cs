@@ -49,8 +49,8 @@ namespace Integration
                 Sys.Add_M(new OuterInput
                 {
                     Title = "Ban",
-                    Platform = "twitch",
-                    Nick = mtw.payload.@event.user_name,
+                    Source = "twitch",
+                    Agent = mtw.payload.@event.user_name,
                 },
                 manager);
                 break;
@@ -58,12 +58,12 @@ namespace Integration
                 Sys.Add_M(new OuterInput
                 {
                     Title = "Message",
-                    Platform = "twitch",
+                    Source = "twitch",
                     ID = mtw.payload.@event.message_id,
+                    Agent = $"<color={mtw.payload.@event.color}>{mtw.payload.@event.chatter_user_name}</color>",
+                    Message = ExtractChatMessage(mtw.payload.@event.message.fragments),
+
                     UserID = mtw.payload.@event.chatter_user_id,
-                    Nick = mtw.payload.@event.chatter_user_name,
-                    NickColor = mtw.payload.@event.color,
-                    UserInput = ExtractChatMessage(mtw.payload.@event.message.fragments),
                     Badges = ExtractBadges(mtw.payload.@event.badges),
                 },
                 manager);
@@ -72,7 +72,7 @@ namespace Integration
                 Sys.Add_M(new OuterInput
                 {
                     Title = "Delete Message",
-                    Platform = "twitch",
+                    Source = "twitch",
                     ID = mtw.payload.@event.message_id,
                 },
                 manager);
@@ -114,54 +114,36 @@ namespace Integration
             });
         }
 
-        protected virtual List<OuterInput.Part> ExtractChatMessage(Fragment[] fragments)
+        protected virtual string ExtractChatMessage(Fragment[] fragments)
         {
-            var list = new List<OuterInput.Part>();
+            var text = "";
 
             for (int f = 0; f < fragments.Length; f++)
             {
                 var fragment = fragments[f];
-                var ep = new OuterInput.Part();
 
                 if (!string.IsNullOrEmpty(fragment.emote.id))
                 {
                     var hash = fragment.emote.id.GetHashCode();
-                    ep.Emote = new OuterInput.Icon
-                    {
-                        Hash = hash,
-                        Index = StreamingSprites.GetSpriteIndex(hash, EmoteURL + $"/{fragment.emote.id}/static/light/2.0")
-                    };
+                    var index = StreamingSprites.GetSpriteIndex(hash, EmoteURL + $"/{fragment.emote.id}/static/light/2.0");
+
+                    text += $"<sprite name=\"{StreamingSprites.Asset}_{index}\">";
                 }
                 else if (fragment.text != null)
-                    ep.Message = new OuterInput.Part.Text
-                    {
-                        Content = fragments[f].text
-                    };
-
-                list.Add(ep);
+                    text += fragment.text;
             }
 
-            return list;
+            return text;
         }
-        protected virtual List<OuterInput.Icon> ExtractBadges(Badge[] badges)
+        protected virtual List<int> ExtractBadges(Badge[] badges)
         {
-            var list = new List<OuterInput.Icon>()
-            {
-                new OuterInput.Icon
-                {
-                    Index = 1
-                }
-            };
+            var list = new List<int>() { 1 };
 
             for (int f = 0; f < badges.Length; f++)
             {
                 var badge = badges[f];
                 var hash = (badge.set_id + badge.id).GetHashCode();
-                list.Add(new OuterInput.Icon
-                {
-                    Hash = hash,
-                    Index = StreamingSprites.GetSpriteIndex(hash, GetBadgeURL(badge.set_id, badge.id)),
-                });
+                list.Add(StreamingSprites.GetSpriteIndex(hash, GetBadgeURL(badge.set_id, badge.id)));
             }
 
             return list;

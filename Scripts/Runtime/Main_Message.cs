@@ -10,6 +10,7 @@ namespace Integration
 {
     public class Main_Message : ChatMessage
     {
+        [Space]
         [SerializeField] MenuButton DeleteButton;
         [SerializeField] MenuButton TimeoutButton;
         [SerializeField] MenuButton BanButton;

@@ -47,7 +47,7 @@ namespace Integration
                 var transform = view[v];
                 var message = transform.GetComponent<ChatMessage>();
                 var m_Input = message.GetInput();
-                if (m_Input.Platform == input.Platform &&
+                if (m_Input.Source == input.Source &&
                       m_Input.ID == input.ID)
                 {
                     StreamingSprites.RemoveRange(message.GetSmiles());
@@ -67,8 +67,8 @@ namespace Integration
                 var transform = view[m];
                 var message = transform.GetComponent<ChatMessage>();
                 var m_Input = message.GetInput();
-                if (m_Input.Platform == input.Platform &&
-                      m_Input.Nick == input.Nick)
+                if (m_Input.Source == input.Source &&
+                      m_Input.Agent == input.Agent)
                 {
                     StreamingSprites.RemoveRange(message.GetSmiles());
 

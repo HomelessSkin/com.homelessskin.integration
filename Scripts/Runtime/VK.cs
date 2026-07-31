@@ -67,23 +67,22 @@ namespace Integration
 
                 Sys.Add_M(new OuterInput
                 {
-                    Platform = "vk",
+                    Source = "vk",
 
                     Title = "Message",
                     ID = m.id.ToString(),
 
-                    Nick = m.author.nick,
-                    NickColor = $"#{Colors[m.author.nick_color]}",
+                    Agent = $"<color=#{Colors[m.author.nick_color]}>{m.author.nick}</color>",
 
+                    Message = ExtractChatMessage(data.data.chat_message),
                     Badges = ExtractBadges(m.author),
-                    UserInput = ExtractChatMessage(data.data.chat_message),
                 },
                 manager);
                 break;
                 case "channel_chat_message_delete":
                 Sys.Add_M(new OuterInput
                 {
-                    Platform = "vk",
+                    Source = "vk",
 
                     Title = "Delete Message",
                     ID = data.data.chat_message.id.ToString()
@@ -112,61 +111,37 @@ namespace Integration
             Log.Info(this, $"Sending subscription to channel: {message.subscribe.channel}");
             platform.Socket.Send(JsonUtility.ToJson(message));
         }
-        protected virtual List<OuterInput.Part> ExtractChatMessage(Message message)
+        protected virtual string ExtractChatMessage(Message message)
         {
-            var list = new List<OuterInput.Part>();
-            var tasks = new List<Task>();
+            var text = "";
 
-            for (int p = 0; p < message.parts.Count; p++)
+            for (int f = 0; f < message.parts.Count; f++)
             {
-                var part = message.parts[p];
-                var ep = new OuterInput.Part { };
+                var part = message.parts[f];
 
                 if (part.text != null)
-                    ep.Message = new OuterInput.Part.Text
-                    {
-                        Content = part.text.content
-                    };
+                    text += part.text.content;
                 if (part.smile != null && !string.IsNullOrEmpty(part.smile.medium_url))
                 {
                     var hash = part.smile.id.GetHashCode();
-                    ep.Emote = new OuterInput.Icon
-                    {
-                        Hash = hash,
-                        Index = StreamingSprites.GetSpriteIndex(hash, part.smile.medium_url)
-                    };
-                }
-                if (part.mention != null)
-                    ep.Reply = new OuterInput.Part.Mention
-                    {
-                        Nick = part.mention.nick
-                    };
+                    var index = StreamingSprites.GetSpriteIndex(hash, part.smile.medium_url);
 
-                list.Add(ep);
+                    text += $"<sprite name=\"{StreamingSprites.Asset}_{index}\">";
+                }
             }
 
-            return list;
+            return text;
         }
-        protected virtual List<OuterInput.Icon> ExtractBadges(Author author)
+        protected virtual List<int> ExtractBadges(Author author)
         {
-            var list = new List<OuterInput.Icon>()
-            {
-                new OuterInput.Icon
-                {
-                    Index = 0
-                }
-            };
+            var list = new List<int>() { 0 };
 
             for (int r = 0; r < author.roles.Count; r++)
             {
                 var role = author.roles[r];
                 var hash = role.id.GetHashCode();
 
-                list.Add(new OuterInput.Icon
-                {
-                    Hash = hash,
-                    Index = StreamingSprites.GetSpriteIndex(hash, role.medium_url),
-                });
+                list.Add(StreamingSprites.GetSpriteIndex(hash, role.medium_url));
             }
 
             for (int b = 0; b < author.badges.Count; b++)
@@ -174,11 +149,7 @@ namespace Integration
                 var badge = author.badges[b];
                 var hash = badge.id.GetHashCode();
 
-                list.Add(new OuterInput.Icon
-                {
-                    Hash = hash,
-                    Index = StreamingSprites.GetSpriteIndex(hash, badge.medium_url),
-                });
+                list.Add(StreamingSprites.GetSpriteIndex(hash, badge.medium_url));
             }
 
             return list;

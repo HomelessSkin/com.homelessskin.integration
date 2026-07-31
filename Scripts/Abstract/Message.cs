@@ -12,63 +12,37 @@ namespace Integration
 {
     public abstract class ChatMessage : MonoBehaviour
     {
+        [SerializeField] TMP_Text Nick;
+        [SerializeField] TMP_Text Badges;
         [SerializeField] TMP_Text Content;
 
         protected OuterInput Input;
 
         protected List<int> Icons = new List<int>();
 
-        public void Init(OuterInput input)
+        public virtual void Init(OuterInput input)
         {
-            Icons.Clear();
-
             Input = input;
 
-            var color = "#808080";
-            if (!string.IsNullOrEmpty(input.NickColor))
-                color = input.NickColor;
+            Icons.Clear();
 
-            var text = "";
-
+            if (input.Icons != null)
+                Icons.AddRange(input.Icons);
             if (input.Badges != null)
-                for (int b = 0; b < input.Badges.Count; b++)
-                {
-                    var badge = input.Badges[b];
-                    text += $"<sprite name=\"{StreamingSprites.Asset}_{badge.Index}\">";
-
-                    if (!Icons.Contains(badge.Hash))
-                        Icons.Add(badge.Hash);
-                }
-
-            text += $"<color={color}>{input.Nick}</color>: ";
-
-            if (input.UserInput != null)
             {
-                if (input.IsSlashMe)
-                    text += $"<color={input.NickColor}><i>";
+                Icons.AddRange(input.Badges);
 
-                for (int pt = 0; pt < input.UserInput.Count; pt++)
-                {
-                    var part = input.UserInput[pt];
-                    if (part.Message != null &&
-                        !string.IsNullOrEmpty(part.Message.Content))
-                        text += part.Message.Content;
+                var badges = "";
+                for (int b = 0; b < input.Badges.Count; b++)
+                    badges += $"<sprite name=\"{StreamingSprites.Asset}_{input.Badges[b]}\">";
 
-                    if (part.Emote != null)
-                    {
-                        text += $"<sprite name=\"{StreamingSprites.Asset}_{part.Emote.Index}\">";
-
-                        if (!Icons.Contains(part.Emote.Hash))
-                            Icons.Add(part.Emote.Hash);
-                    }
-                }
-
-                if (input.IsSlashMe)
-                    text += $"</color></i>";
+                Badges.text = badges;
             }
 
-            Content.text = text;
+            Nick.text = $"{input.Agent}";
+            Content.text = $"{input.Message}";
         }
+
         public OuterInput GetInput() => Input;
         public List<int> GetSmiles() => Icons;
     }

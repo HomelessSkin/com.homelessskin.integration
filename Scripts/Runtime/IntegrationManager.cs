@@ -45,7 +45,7 @@ namespace Integration
             }
             public async void SendMessage(OuterInput input)
             {
-                if (input.UserInput == null || input.UserInput.Count == 0)
+                if (string.IsNullOrEmpty(input.Message))
                     return;
 
                 var platform = TwitchAdapter.GetPlatform();
@@ -53,12 +53,12 @@ namespace Integration
                 {
                     broadcaster_id = platform.ChannelID,
                     sender_id = platform.ChannelID,
-                    message = $"{input.UserInput[0].Message?.Content}"
+                    message = $"{input.Message}"
                 });
             }
             public async void DeleteMessage(OuterInput input)
             {
-                switch (input.Platform)
+                switch (input.Source)
                 {
                     case "vk":
                     {
@@ -76,7 +76,7 @@ namespace Integration
             }
             public async void TimeOut(OuterInput input)
             {
-                switch (input.Platform)
+                switch (input.Source)
                 {
                     case "vk":
                     {
@@ -87,21 +87,21 @@ namespace Integration
                     {
                         var platform = TwitchAdapter.GetPlatform();
                         await TwitchAdapter.Post($"{TwitchBanURL}?broadcaster_id={platform.ChannelID}&moderator_id={platform.ChannelID}",
-                                    new TwitchTimeout
-                                    {
-                                        data = new TwitchTimeoutData
-                                        {
-                                            user_id = input.UserID,
-                                            duration = 600
-                                        }
-                                    });
+                            new TwitchTimeout
+                            {
+                                data = new TwitchTimeoutData
+                                {
+                                    user_id = input.UserID,
+                                    duration = 600
+                                }
+                            });
                     }
                     break;
                 }
             }
             public async void Ban(OuterInput input)
             {
-                switch (input.Platform)
+                switch (input.Source)
                 {
                     case "vk":
                     {
