@@ -60,7 +60,7 @@ namespace Integration
                     Title = "Message",
                     Source = "twitch",
                     ID = mtw.payload.@event.message_id,
-                    Agent = $"<color={mtw.payload.@event.color}>{mtw.payload.@event.chatter_user_name}</color>",
+                    Agent = ExtractAgent(mtw.payload.@event.chatter_user_name, mtw.payload.@event.color),
                     Message = ExtractChatMessage(mtw.payload.@event.message.fragments),
 
                     UserID = mtw.payload.@event.chatter_user_id,
@@ -114,6 +114,24 @@ namespace Integration
             });
         }
 
+        protected virtual string ExtractAgent(string user_name, string color)
+        {
+            var agent = "";
+            var colorised = false;
+            if (!string.IsNullOrEmpty(color))
+            {
+                colorised = true;
+
+                agent += $"<color={color}>";
+            }
+
+            agent += $"{user_name}";
+
+            if (colorised)
+                agent += "</color>";
+
+            return agent;
+        }
         protected virtual string ExtractChatMessage(Fragment[] fragments)
         {
             var text = "";
