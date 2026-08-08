@@ -65,6 +65,27 @@ namespace Integration
             }
         }
 
+        public async Task<string> Get(string uri, string bearer)
+        {
+            using (var request = UnityWebRequest.Get(uri))
+            {
+                request.SetRequestHeader("Authorization", $"Bearer {bearer}");
+                request.SetRequestHeader("Client-ID", AppID);
+
+                await request.SendWebRequest();
+
+                if (request.result == UnityWebRequest.Result.Success)
+                {
+                    Log.Info(this, $"{uri} Object loaded successfully.");
+
+                    return request.downloadHandler.text;
+                }
+                else
+                    Log.Error(this, request.error);
+            }
+
+            return null;
+        }
         public async Task<T> Get<T>(string uri, string bearer) where T : class
         {
             using (var request = UnityWebRequest.Get(uri))
@@ -114,17 +135,22 @@ namespace Integration
                 request.SetRequestHeader("Authorization", $"Bearer {bearer}");
                 request.SetRequestHeader("Client-ID", AppID);
 
-                var data = JsonUtility.ToJson(obj);
-                var bodyRaw = System.Text.Encoding.UTF8.GetBytes(data);
-
-                request.uploadHandler = new UploadHandlerRaw(bodyRaw);
-                request.downloadHandler = new DownloadHandlerBuffer();
+                if (obj != null)
+                {
+                    var data = JsonUtility.ToJson(obj);
+                    var bodyRaw = System.Text.Encoding.UTF8.GetBytes(data);
+                    request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+                    request.downloadHandler = new DownloadHandlerBuffer();
+                }
 
                 await request.SendWebRequest();
 
                 if (request.result == UnityWebRequest.Result.Success)
                 {
-                    Log.Info(this, $"{obj.GetType().FullName} has been posted.");
+                    if (obj != null)
+                        Log.Info(this, $"{obj.GetType().FullName} has been posted.");
+                    else
+                        Log.Info(this, $"Empty object has been posted.");
 
                     return request.downloadHandler.text;
                 }

@@ -19,8 +19,11 @@ namespace Integration
         protected class Chat
         {
             string TwitchMessagesURL = $"https://api.twitch.tv/helix/chat/messages";
+            string TwitchCategoriesURL = $"https://api.twitch.tv/helix/search/categories";
+            string TwitchChannelsURL = $"https://api.twitch.tv/helix/channels";
             string TwitchModerationURL = $"https://api.twitch.tv/helix/moderation/chat";
             string TwitchBanURL = $"https://api.twitch.tv/helix/moderation/bans";
+            string TwitchClipsURL = $"https://api.twitch.tv/helix/clips";
 
             [Space]
             public MonoAdapter VKAdapter;
@@ -55,6 +58,21 @@ namespace Integration
                     sender_id = platform.ChannelID,
                     message = $"{input.Message}"
                 });
+            }
+            public async void SetCategory(OuterInput input)
+            {
+                if (string.IsNullOrEmpty(input.Message))
+                    return;
+
+                var result = await TwitchAdapter.Get<TwitchCategoriesResponse>($"{TwitchCategoriesURL}?query={input.Message}");
+                if (result == null ||
+                     result.data == null ||
+                     result.data.Length == 0 ||
+                     string.IsNullOrEmpty(result.data[0].id))
+                    return;
+
+                var platform = TwitchAdapter.GetPlatform();
+                await TwitchAdapter.Patch($"{TwitchChannelsURL}?broadcaster_id={platform.ChannelID}", new CategorySet { game_id = result.data[0].id });
             }
             public async void DeleteMessage(OuterInput input)
             {
@@ -123,13 +141,20 @@ namespace Integration
                     break;
                 }
             }
+            public async void Clip()
+            {
+                var platform = TwitchAdapter.GetPlatform();
+                await TwitchAdapter.Post($"{TwitchClipsURL}?broadcaster_id={platform.ChannelID}&has_delay={false}");
+            }
         }
 
         public void SendPlatformMessage(string message) => _Chat.SendMessage(message);
+        public void SetCategory(OuterInput input) => _Chat.SetCategory(input);
         public void SendPlatformMessage(OuterInput input) => _Chat.SendMessage(input);
         public void DeleteMessage(OuterInput input) => _Chat.DeleteMessage(input);
         public void TimeOut(OuterInput input) => _Chat.TimeOut(input);
         public void Ban(OuterInput input) => _Chat.Ban(input);
+        public void Clip() => _Chat.Clip();
         #endregion
 
         protected override void Awake()
@@ -148,10 +173,24 @@ namespace Integration
             public string message;
         }
         [Serializable]
+        class TwitchCategoriesResponse
+        {
+            public Category[] data;
+        }
+        [Serializable]
+        class Category
+        {
+            public string id;
+        }
+        [Serializable]
+        class CategorySet
+        {
+            public string game_id;
+        }
+        [Serializable]
         class TwitchTimeout
         {
             public TwitchTimeoutData data;
-
         }
         [Serializable]
         class TwitchTimeoutData
