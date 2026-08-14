@@ -155,7 +155,7 @@ namespace Integration
         }
         protected virtual List<int> ExtractBadges(Badge[] badges)
         {
-            var list = new List<int>() { 1 };
+            var list = new List<int>() { 2 };
 
             for (int f = 0; f < badges.Length; f++)
             {

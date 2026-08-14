@@ -134,7 +134,7 @@ namespace Integration
         }
         protected virtual List<int> ExtractBadges(Author author)
         {
-            var list = new List<int>() { 0 };
+            var list = new List<int>() { 1 };
 
             for (int r = 0; r < author.roles.Count; r++)
             {
