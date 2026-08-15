@@ -348,8 +348,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
-  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+    rgba: 4278190080
+  m_fontColor: {r: 0, g: 0, b: 0, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -372,7 +372,7 @@ MonoBehaviour:
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
-  m_fontStyle: 0
+  m_fontStyle: 1
   m_HorizontalAlignment: 1
   m_VerticalAlignment: 256
   m_textAlignment: 65535
@@ -895,7 +895,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: ead4a04a43bc7cb4f892fb43f604d931, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 4f4b8ded73ced1a40afcf2d1139ff3a7, type: 3}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -920,7 +920,7 @@ MonoBehaviour:
   m_Padding:
     m_Left: 24
     m_Right: 72
-    m_Top: 46
+    m_Top: 50
     m_Bottom: 18
   m_ChildAlignment: 6
   m_Spacing: 8
@@ -1001,7 +1001,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -26, y: -6}
+  m_AnchoredPosition: {x: -26, y: -10}
   m_SizeDelta: {x: -92, y: 36}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!222 &7941446487278619169
@@ -1206,7 +1206,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3445150795387016123, guid: 9a2278ec408a9a1408aceb663facccfd, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -52
+      value: -56
       objectReference: {fileID: 0}
     - target: {fileID: 3445150795387016123, guid: 9a2278ec408a9a1408aceb663facccfd, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -1429,7 +1429,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3445150795387016123, guid: 9a2278ec408a9a1408aceb663facccfd, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -6
+      value: -10
       objectReference: {fileID: 0}
     - target: {fileID: 3445150795387016123, guid: 9a2278ec408a9a1408aceb663facccfd, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -1648,7 +1648,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3445150795387016123, guid: 9a2278ec408a9a1408aceb663facccfd, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -29
+      value: -33
       objectReference: {fileID: 0}
     - target: {fileID: 3445150795387016123, guid: 9a2278ec408a9a1408aceb663facccfd, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x

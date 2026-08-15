@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 
 using Core;
 
@@ -34,6 +35,13 @@ namespace Integration
             public Messenger OBSMessenger;
 
             [Space]
+            public RectTransform Categories;
+            public RectTransform Content;
+            public MenuButton Category;
+
+            MenuButton[] Buttons;
+
+            [Space]
             public StreamingSpritesData Smiles;
 
             public async void SendMessage(string message)
@@ -59,7 +67,7 @@ namespace Integration
                     message = $"{input.Message}"
                 });
             }
-            public async void SetCategory(OuterInput input)
+            public async void FindCategory(OuterInput input)
             {
                 if (string.IsNullOrEmpty(input.Message))
                     return;
@@ -67,12 +75,43 @@ namespace Integration
                 var result = await TwitchAdapter.Get<TwitchCategoriesResponse>($"{TwitchCategoriesURL}?query={input.Message}");
                 if (result == null ||
                      result.data == null ||
-                     result.data.Length == 0 ||
-                     string.IsNullOrEmpty(result.data[0].id))
-                    return;
+                     result.data.Length == 0)
+                {
+                    Log.Warning(this, $"Can not find Category {input.Message}!");
 
-                var platform = TwitchAdapter.GetPlatform();
-                await TwitchAdapter.Patch($"{TwitchChannelsURL}?broadcaster_id={platform.ChannelID}", new CategorySet { game_id = result.data[0].id });
+                    return;
+                }
+
+                Categories.gameObject.SetActive(true);
+
+                Buttons = new MenuButton[result.data.Length];
+                for (int d = 0; d < result.data.Length; d++)
+                {
+                    var button = Instantiate(Category, Content);
+
+                    button.SetLabel(result.data[d].name);
+                    var key = $"{result.data[d].id}";
+                    button.AddListener(() => SetCategory(key));
+
+                    Buttons[d] = button;
+                }
+
+                for (int d = 0; d < result.data.Length; d++)
+                {
+                    var c = 0;
+                    Texture2D text = null;
+                    while (!text && c < 1000)
+                    {
+                        text = await DataUtil.LoadTexture(result.data[d].box_art_url);
+
+                        await Task.Delay(128);
+                    }
+
+                    if (text && Buttons != null && d < Buttons.Length)
+                        Buttons[d]?.SetImage(text);
+                    else
+                        break;
+                }
             }
             public async void DeleteMessage(OuterInput input)
             {
@@ -146,10 +185,23 @@ namespace Integration
                 var platform = TwitchAdapter.GetPlatform();
                 await TwitchAdapter.Post($"{TwitchClipsURL}?broadcaster_id={platform.ChannelID}&has_delay={false}");
             }
+
+            async void SetCategory(string id)
+            {
+                var platform = TwitchAdapter.GetPlatform();
+                await TwitchAdapter.Patch($"{TwitchChannelsURL}?broadcaster_id={platform.ChannelID}", new CategorySet { game_id = id });
+
+                for (int b = 0; b < Buttons.Length; b++)
+                    Destroy(Buttons[b].gameObject);
+
+                Buttons = null;
+
+                Categories.gameObject.SetActive(false);
+            }
         }
 
         public void SendPlatformMessage(string message) => _Chat.SendMessage(message);
-        public void SetCategory(OuterInput input) => _Chat.SetCategory(input);
+        public void FindCategory(OuterInput input) => _Chat.FindCategory(input);
         public void SendPlatformMessage(OuterInput input) => _Chat.SendMessage(input);
         public void DeleteMessage(OuterInput input) => _Chat.DeleteMessage(input);
         public void TimeOut(OuterInput input) => _Chat.TimeOut(input);
@@ -180,7 +232,9 @@ namespace Integration
         [Serializable]
         class Category
         {
+            public string name;
             public string id;
+            public string box_art_url;
         }
         [Serializable]
         class CategorySet
