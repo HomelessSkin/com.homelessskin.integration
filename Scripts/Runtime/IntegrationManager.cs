@@ -26,6 +26,8 @@ namespace Integration
             string TwitchBanURL = $"https://api.twitch.tv/helix/moderation/bans";
             string TwitchClipsURL = $"https://api.twitch.tv/helix/clips";
 
+            string SetCategoryTitle = "Set Category";
+
             [Space]
             public MonoAdapter VKAdapter;
             public MonoAdapter TwitchAdapter;
@@ -90,8 +92,7 @@ namespace Integration
                     var button = Instantiate(Category, Content);
 
                     button.SetLabel(result.data[d].name);
-                    var key = $"{result.data[d].id}";
-                    button.AddListener(() => SetCategory(key));
+                    button.AddInput(new OuterInput(SetCategoryTitle, $"{result.data[d].id}"));
 
                     Buttons[d] = button;
                 }
@@ -112,6 +113,23 @@ namespace Integration
                     else
                         break;
                 }
+            }
+            public async void SetCategory(OuterInput input)
+            {
+                if (string.IsNullOrEmpty(input.Message))
+                    Log.Warning(this, $"No Category ID!");
+                else
+                {
+                    var platform = TwitchAdapter.GetPlatform();
+                    await TwitchAdapter.Patch($"{TwitchChannelsURL}?broadcaster_id={platform.ChannelID}", new CategorySet { game_id = input.Message });
+                }
+
+                for (int b = 0; b < Buttons.Length; b++)
+                    Destroy(Buttons[b].gameObject);
+
+                Buttons = null;
+
+                Categories.gameObject.SetActive(false);
             }
             public async void DeleteMessage(OuterInput input)
             {
@@ -185,24 +203,12 @@ namespace Integration
                 var platform = TwitchAdapter.GetPlatform();
                 await TwitchAdapter.Post($"{TwitchClipsURL}?broadcaster_id={platform.ChannelID}&has_delay={false}");
             }
-
-            async void SetCategory(string id)
-            {
-                var platform = TwitchAdapter.GetPlatform();
-                await TwitchAdapter.Patch($"{TwitchChannelsURL}?broadcaster_id={platform.ChannelID}", new CategorySet { game_id = id });
-
-                for (int b = 0; b < Buttons.Length; b++)
-                    Destroy(Buttons[b].gameObject);
-
-                Buttons = null;
-
-                Categories.gameObject.SetActive(false);
-            }
         }
 
         public void SendPlatformMessage(string message) => _Chat.SendMessage(message);
-        public void FindCategory(OuterInput input) => _Chat.FindCategory(input);
         public void SendPlatformMessage(OuterInput input) => _Chat.SendMessage(input);
+        public void FindCategory(OuterInput input) => _Chat.FindCategory(input);
+        public void SetCategory(OuterInput input) => _Chat.SetCategory(input);
         public void DeleteMessage(OuterInput input) => _Chat.DeleteMessage(input);
         public void TimeOut(OuterInput input) => _Chat.TimeOut(input);
         public void Ban(OuterInput input) => _Chat.Ban(input);

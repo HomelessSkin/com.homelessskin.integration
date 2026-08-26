@@ -1,5 +1,7 @@
 using Core;
 
+using Input;
+
 using UI;
 
 using Unity.Entities;
@@ -15,33 +17,24 @@ namespace Integration
         [SerializeField] MenuButton TimeoutButton;
         [SerializeField] MenuButton BanButton;
 
-        protected virtual void Start()
+        public override void Init(OuterInput input)
         {
-            DeleteButton?.AddListener(OnDelete);
-            TimeoutButton?.AddListener(OnTimeout);
-            BanButton?.AddListener(OnBan);
-        }
-        protected virtual void OnDestroy()
-        {
-            DeleteButton?.RemoveAllListeners();
-            TimeoutButton?.RemoveAllListeners();
-            BanButton?.RemoveAllListeners();
-        }
+            base.Init(input);
 
-        protected virtual void OnDelete()
-        {
-            Input.Title = "Delete Message Button";
-            Sys.Add_M(Input, World.DefaultGameObjectInjectionWorld.EntityManager);
-        }
-        protected virtual void OnTimeout()
-        {
-            Input.Title = "Timeout Button";
-            Sys.Add_M(Input, World.DefaultGameObjectInjectionWorld.EntityManager);
-        }
-        protected virtual void OnBan()
-        {
-            Input.Title = "Ban Button";
-            Sys.Add_M(Input, World.DefaultGameObjectInjectionWorld.EntityManager);
+            var del = new OuterInput(input);
+            del.Title = "Delete Message Button";
+            DeleteButton.RemoveAllInputs();
+            DeleteButton.AddInput(del);
+
+            var to = new OuterInput(input);
+            to.Title = "Timeout Button";
+            TimeoutButton.RemoveAllInputs();
+            TimeoutButton.AddInput(to);
+
+            var ban = new OuterInput(input);
+            ban.Title = "Ban Button";
+            BanButton.RemoveAllInputs();
+            BanButton.AddInput(ban);
         }
     }
 }
