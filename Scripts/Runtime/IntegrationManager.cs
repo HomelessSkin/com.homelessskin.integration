@@ -46,6 +46,11 @@ namespace Integration
             [Space]
             public StreamingSpritesData Smiles;
 
+            [Space]
+            public float ClipDelay = 120f;
+
+            float ClipT = 0f;
+
             public async void SendMessage(string message)
             {
                 var platform = TwitchAdapter.GetPlatform();
@@ -200,8 +205,19 @@ namespace Integration
             }
             public async void Clip()
             {
+                if (ClipT > 0f)
+                    return;
+
+                ClipT += ClipDelay;
+
                 var platform = TwitchAdapter.GetPlatform();
                 await TwitchAdapter.Post($"{TwitchClipsURL}?broadcaster_id={platform.ChannelID}&has_delay={false}");
+            }
+
+            public void Update(float dt)
+            {
+                if (ClipT > 0f)
+                    ClipT -= dt;
             }
         }
 
@@ -220,6 +236,12 @@ namespace Integration
             base.Awake();
 
             StreamingSprites.Prepare(_Chat.Smiles);
+        }
+        protected override void Update()
+        {
+            base.Update();
+
+            _Chat.Update(Time.deltaTime);
         }
 
         #region TWITCH
