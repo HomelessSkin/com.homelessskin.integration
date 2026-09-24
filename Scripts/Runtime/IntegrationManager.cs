@@ -211,7 +211,13 @@ namespace Integration
                 ClipT += ClipDelay;
 
                 var platform = TwitchAdapter.GetPlatform();
-                await TwitchAdapter.Post($"{TwitchClipsURL}?broadcaster_id={platform.ChannelID}&has_delay={false}");
+                var response = await TwitchAdapter.Post($"{TwitchClipsURL}?broadcaster_id={platform.ChannelID}&has_delay={false}");
+                if (string.IsNullOrEmpty(response))
+                    return;
+
+                var clip = JsonUtility.FromJson<TwitchClipResponse>(response);
+                if (clip.data != null && clip.data.Length > 0 && !string.IsNullOrEmpty(clip.data[0].edit_url))
+                    SendMessage($"Клип создан! Ссылка для редактирования: {clip.data[0].edit_url}");
             }
 
             public void Update(float dt)
@@ -251,6 +257,16 @@ namespace Integration
             public string broadcaster_id;
             public string sender_id;
             public string message;
+        }
+        [Serializable]
+        class TwitchClipResponse
+        {
+            public ClipData[] data;
+        }
+        [Serializable]
+        class ClipData
+        {
+            public string edit_url;
         }
         [Serializable]
         class TwitchCategoriesResponse
