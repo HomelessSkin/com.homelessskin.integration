@@ -94,7 +94,6 @@ namespace Integration
 
             return "";
         }
-
         protected override async Task SubscribeToEvent(string type, Platform platform)
         {
             await Post(EventSubURL, platform.Token, new EventSubRequest

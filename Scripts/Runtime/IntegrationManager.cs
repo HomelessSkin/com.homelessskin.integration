@@ -203,21 +203,31 @@ namespace Integration
                     break;
                 }
             }
-            public async void Clip()
+            public async void Clip(OuterInput input)
             {
                 if (ClipT > 0f)
+                {
+                    SendMessage($"@{input.Agent} Клип не создан! Оставшееся время до следующего клипа: {Mathf.RoundToInt(ClipT)} секунд!");
+
                     return;
+                }
 
                 ClipT += ClipDelay;
 
                 var platform = TwitchAdapter.GetPlatform();
                 var response = await TwitchAdapter.Post($"{TwitchClipsURL}?broadcaster_id={platform.ChannelID}&has_delay={false}");
                 if (string.IsNullOrEmpty(response))
+                {
+                    SendMessage($"@{input.Agent} Клип не создан! Twitch залагал!");
+
                     return;
+                }
 
                 var clip = JsonUtility.FromJson<TwitchClipResponse>(response);
                 if (clip.data != null && clip.data.Length > 0 && !string.IsNullOrEmpty(clip.data[0].edit_url))
-                    SendMessage($"Клип создан! Ссылка для редактирования: {clip.data[0].edit_url}");
+                    SendMessage($"@{input.Agent} Клип создан! Ссылка для редактирования: {clip.data[0].edit_url}");
+                else
+                    SendMessage($"@{input.Agent} Клип создан, но Twitch не дал на него ссылку!");
             }
 
             public void Update(float dt)
@@ -234,7 +244,7 @@ namespace Integration
         public void DeleteMessage(OuterInput input) => _Chat.DeleteMessage(input);
         public void TimeOut(OuterInput input) => _Chat.TimeOut(input);
         public void Ban(OuterInput input) => _Chat.Ban(input);
-        public void Clip() => _Chat.Clip();
+        public void Clip(OuterInput input) => _Chat.Clip(input);
         #endregion
 
         protected override void Awake()
