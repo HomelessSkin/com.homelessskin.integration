@@ -207,7 +207,7 @@ namespace Integration
             {
                 if (ClipT > 0f)
                 {
-                    SendMessage($"@{input.Agent} Клип не создан! Оставшееся время до следующего клипа: {Mathf.RoundToInt(ClipT)} секунд!");
+                    SendMessage($"Клип не создан! Оставшееся время до следующего клипа: {Mathf.RoundToInt(ClipT)} секунд!");
 
                     return;
                 }
@@ -218,16 +218,16 @@ namespace Integration
                 var response = await TwitchAdapter.Post($"{TwitchClipsURL}?broadcaster_id={platform.ChannelID}&has_delay={false}");
                 if (string.IsNullOrEmpty(response))
                 {
-                    SendMessage($"@{input.Agent} Клип не создан! Twitch залагал!");
+                    SendMessage($"Клип не создан! Twitch залагал!");
 
                     return;
                 }
 
                 var clip = JsonUtility.FromJson<TwitchClipResponse>(response);
                 if (clip.data != null && clip.data.Length > 0 && !string.IsNullOrEmpty(clip.data[0].edit_url))
-                    SendMessage($"@{input.Agent} Клип создан! Ссылка для редактирования: {clip.data[0].edit_url}");
+                    SendMessage($"Клип создан! Ссылка для редактирования: {clip.data[0].edit_url}");
                 else
-                    SendMessage($"@{input.Agent} Клип создан, но Twitch не дал на него ссылку!");
+                    SendMessage($"Клип создан, но Twitch не дал на него ссылку!");
             }
 
             public void Update(float dt)
