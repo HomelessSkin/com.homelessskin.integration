@@ -28,8 +28,6 @@ namespace Integration
         }
 
         protected virtual bool FromPool(out RectTransform t) => Scroll.TryGetFromPool(out t);
-
-        #region OUTER INPUT
         public void OnMessage(OuterInput input)
         {
             if (FromPool(out var m))
@@ -39,6 +37,8 @@ namespace Integration
                 Scroll.ToView(m);
             }
         }
+
+        #region OUTER INPUT
         public void OnDeleteMessage(OuterInput input)
         {
             var view = Scroll.GetView();

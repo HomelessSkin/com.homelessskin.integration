@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 using Core;
@@ -15,6 +16,9 @@ namespace Integration
     [CreateAssetMenu(fileName = "Twitch", menuName = "Integration/Twitch Processor")]
     public class Twitch : Processor
     {
+        [Space]
+        [SerializeField] bool SendAnimations;
+
         protected static string EventSubURL = "https://api.twitch.tv/helix/eventsub/subscriptions";
         protected static string GetUsersURL = "https://api.twitch.tv/helix/users";
         protected static string EmoteURL = "https://static-cdn.jtvnw.net/emoticons/v2";
@@ -141,6 +145,14 @@ namespace Integration
 
                 if (!string.IsNullOrEmpty(fragment.emote.id))
                 {
+                    if (SendAnimations &&
+                         fragment.emote.format.Contains("animated"))
+                    {
+                        Sys.Add_M(new OuterInput("Load GIF", fragment.emote.id), World.DefaultGameObjectInjectionWorld.EntityManager);
+
+                        continue;
+                    }
+
                     var hash = fragment.emote.id.GetHashCode();
                     var index = StreamingSprites.GetSpriteIndex(hash, EmoteURL + $"/{fragment.emote.id}/static/light/2.0");
 

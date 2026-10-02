@@ -304,6 +304,7 @@ namespace Integration
     public class Emote
     {
         public string id;
+        public string[] format;
     }
 
     [Serializable]
