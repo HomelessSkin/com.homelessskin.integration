@@ -145,18 +145,21 @@ namespace Integration
 
                 if (!string.IsNullOrEmpty(fragment.emote.id))
                 {
+                    var hash = fragment.emote.id.GetHashCode();
+
                     if (SendAnimations &&
                          fragment.emote.format.Contains("animated"))
                     {
-                        Sys.Add_M(new OuterInput("Load GIF", fragment.emote.id), World.DefaultGameObjectInjectionWorld.EntityManager);
+                        var index = StreamingSprites.GetAnimationIndex(hash, EmoteURL + $"/{fragment.emote.id}/animated/light/2.0");
 
-                        continue;
+                        text += $"<sprite name=\"{StreamingSprites.Asset}_{index}\">";
                     }
+                    else
+                    {
+                        var index = StreamingSprites.GetSpriteIndex(hash, EmoteURL + $"/{fragment.emote.id}/static/light/2.0");
 
-                    var hash = fragment.emote.id.GetHashCode();
-                    var index = StreamingSprites.GetSpriteIndex(hash, EmoteURL + $"/{fragment.emote.id}/static/light/2.0");
-
-                    text += $"<sprite name=\"{StreamingSprites.Asset}_{index}\">";
+                        text += $"<sprite name=\"{StreamingSprites.Asset}_{index}\">";
+                    }
                 }
                 else if (fragment.text != null)
                     text += fragment.text;

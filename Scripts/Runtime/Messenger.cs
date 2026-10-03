@@ -1,7 +1,5 @@
 using System.Collections.Generic;
 
-using Core;
-
 using Input;
 
 using UI;
@@ -50,7 +48,7 @@ namespace Integration
                 if (m_Input.Source == input.Source &&
                       m_Input.ID == input.ID)
                 {
-                    StreamingSprites.RemoveRange(message.GetSmiles());
+                    //StreamingSprites.RemoveRange(message.GetSmiles());
 
                     Scroll.ToPool(v);
 
@@ -70,7 +68,7 @@ namespace Integration
                 if (m_Input.Source == input.Source &&
                       m_Input.Agent == input.Agent)
                 {
-                    StreamingSprites.RemoveRange(message.GetSmiles());
+                    //StreamingSprites.RemoveRange(message.GetSmiles());
 
                     toRemove.Add(m);
                 }

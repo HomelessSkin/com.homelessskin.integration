@@ -257,7 +257,11 @@ namespace Integration
         {
             base.Update();
 
-            _Chat.Update(Time.deltaTime);
+            var dt = Time.deltaTime;
+
+            _Chat.Update(dt);
+
+            StreamingSprites.UpdateAnimations(dt);
         }
 
         #region TWITCH
