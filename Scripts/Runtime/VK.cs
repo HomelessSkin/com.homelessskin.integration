@@ -53,7 +53,7 @@ namespace Integration
             else
                 message.type = "notification";
         }
-        public override void Invoke(SocketMessage message, EntityManager manager)
+        public override void Invoke(SocketMessage message)
         {
             var mvk = message as SocketMessage_VK;
 
@@ -77,7 +77,7 @@ namespace Integration
                     Message = ExtractChatMessage(data.data.chat_message),
                     Badges = ExtractBadges(m.author),
                 },
-                manager);
+                World.DefaultGameObjectInjectionWorld.EntityManager);
                 break;
                 case "channel_chat_message_delete":
                 Sys.Add_M(new OuterInput
@@ -87,7 +87,7 @@ namespace Integration
                     Title = "Delete Message",
                     ID = data.data.chat_message.id.ToString()
                 },
-                manager);
+                World.DefaultGameObjectInjectionWorld.EntityManager);
                 break;
             }
         }

@@ -31,3 +31,4 @@ MonoBehaviour:
     Name: session_welcome
   - ID: 1087770461
     Name: session_keepalive
+  SendAnimations: 0

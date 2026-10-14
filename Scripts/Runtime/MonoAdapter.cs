@@ -9,8 +9,6 @@ using TMPro;
 
 using UI;
 
-using Unity.Entities;
-
 using UnityEngine;
 
 using WebSocketSharp;
@@ -47,8 +45,6 @@ namespace Integration
             [SerializeField] TMP_InputField TokenInput;
             [SerializeField] TMP_InputField ChannelInput;
 
-            protected EntityManager EntityManager;
-
             public Platform Platform => _Platform;
             protected Platform _Platform;
 
@@ -57,8 +53,6 @@ namespace Integration
             public void StartAuth() => _Processor.StartAuth();
             public void Load()
             {
-                EntityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
-
                 var platform = Load(_Processor.name);
                 if (string.IsNullOrEmpty(platform))
                     return;
@@ -149,12 +143,13 @@ namespace Integration
                         _Processor.SubscribeToEvents(_Platform);
                         break;
                         case "notification":
-                        _Processor.Invoke(message, EntityManager);
+                        _Processor.Invoke(message);
                         break;
                     }
                 }
             }
 
+            public async Task ReleaseRewards() => await _Processor.ReleaseRewards(_Platform);
             public async Task<string> Get(string uri) => await _Processor.Get(uri, _Platform.Token);
             public async Task<T> Get<T>(string uri) where T : class => await _Processor.Get<T>(uri, _Platform.Token);
             public async Task<bool> Delete(string uri) => await _Processor.Delete(uri, _Platform.Token);
@@ -240,6 +235,7 @@ namespace Integration
 
         public Platform GetPlatform() => _Adapter.Platform;
 
+        public async Task ReleaseRewards() => await _Adapter.ReleaseRewards();
         public async Task<string> Get(string uri) => await _Adapter.Get(uri);
         public async Task<T> Get<T>(string uri) where T : class => await _Adapter.Get<T>(uri);
         public async Task<bool> Delete(string uri) => await _Adapter.Delete(uri);

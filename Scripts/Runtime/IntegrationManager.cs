@@ -19,14 +19,14 @@ namespace Integration
         [Serializable]
         protected class Chat
         {
-            string TwitchMessagesURL = $"https://api.twitch.tv/helix/chat/messages";
-            string TwitchCategoriesURL = $"https://api.twitch.tv/helix/search/categories";
-            string TwitchChannelsURL = $"https://api.twitch.tv/helix/channels";
-            string TwitchModerationURL = $"https://api.twitch.tv/helix/moderation/chat";
-            string TwitchBanURL = $"https://api.twitch.tv/helix/moderation/bans";
-            string TwitchClipsURL = $"https://api.twitch.tv/helix/clips";
+            const string TwitchMessagesURL = "https://api.twitch.tv/helix/chat/messages";
+            const string TwitchCategoriesURL = "https://api.twitch.tv/helix/search/categories";
+            const string TwitchChannelsURL = "https://api.twitch.tv/helix/channels";
+            const string TwitchModerationURL = "https://api.twitch.tv/helix/moderation/chat";
+            const string TwitchBanURL = "https://api.twitch.tv/helix/moderation/bans";
+            const string TwitchClipsURL = "https://api.twitch.tv/helix/clips";
 
-            string SetCategoryTitle = "Set Category";
+            const string SetCategoryTitle = "Set Category";
 
             [Space]
             public MonoAdapter VKAdapter;
@@ -47,9 +47,14 @@ namespace Integration
             public StreamingSpritesData Smiles;
 
             [Space]
-            public float ClipDelay = 120f;
+            public int ClipDelay = 120;
+            public int AgitDelay = 120;
+            public int LastMessageDelay = 10;
+            public string AgitMessage;
 
             float ClipT = 0f;
+            public float AgitT = 0f;
+            public float LastMessage;
 
             public async void SendMessage(string message)
             {
@@ -154,30 +159,27 @@ namespace Integration
                     break;
                 }
             }
-            public async void TimeOut(OuterInput input)
+            public async Task<string> TimeOut(string source, string id)
             {
-                switch (input.Source)
+                switch (source)
                 {
                     case "vk":
-                    {
+                    return null;
 
-                    }
-                    break;
                     case "twitch":
-                    {
-                        var platform = TwitchAdapter.GetPlatform();
-                        await TwitchAdapter.Post($"{TwitchBanURL}?broadcaster_id={platform.ChannelID}&moderator_id={platform.ChannelID}",
-                            new TwitchTimeout
-                            {
-                                data = new TwitchTimeoutData
-                                {
-                                    user_id = input.UserID,
-                                    duration = 600
-                                }
-                            });
-                    }
-                    break;
+                    var platform = TwitchAdapter.GetPlatform();
+                    return await TwitchAdapter.Post($"{TwitchBanURL}?broadcaster_id={platform.ChannelID}&moderator_id={platform.ChannelID}",
+                           new TwitchTimeout
+                           {
+                               data = new TwitchTimeoutData
+                               {
+                                   user_id = id,
+                                   duration = 600
+                               }
+                           });
                 }
+
+                return null;
             }
             public async void Ban(OuterInput input)
             {
@@ -234,17 +236,60 @@ namespace Integration
             {
                 if (ClipT > 0f)
                     ClipT -= dt;
+
+                if (AgitT > 0f)
+                {
+                    AgitT -= dt;
+
+                    return;
+                }
+
+                if (Time.realtimeSinceStartup - LastMessage > LastMessageDelay)
+                    return;
+
+                AgitT += AgitDelay;
+
+                if (!string.IsNullOrEmpty(AgitMessage))
+                    SendMessage(AgitMessage);
             }
+            public void ResetLastMessage() => LastMessage = Time.realtimeSinceStartup;
         }
 
         public void SendPlatformMessage(string message) => _Chat.SendMessage(message);
+        public void SetClipDelay(string value) => int.TryParse(value, out _Chat.ClipDelay);
+        public void SetAgitDelay(string value) => int.TryParse(value, out _Chat.AgitDelay);
+        public void SetLastMessageDelay(string value) => int.TryParse(value, out _Chat.LastMessageDelay);
+        public void SetAgitMessage(string value) => _Chat.AgitMessage = value;
+
+        #region OUTER INPUT
+        public void OnMessage(OuterInput input)
+        {
+            switch (Commander.Process(ref input))
+            {
+                case Command.Response.StopInteractionNow:
+                DeleteMessage(input);
+
+                Log.Warning(this, $"Message of {input.Agent} was not posted!");
+                return;
+
+                case Command.Response.SoundAlert:
+                input.Point = 1;
+                break;
+            }
+
+            _Chat.MainMessenger.OnMessage(input);
+            _Chat.OBSMessenger.OnMessage(input);
+
+            _Chat.ResetLastMessage();
+        }
         public void SendPlatformMessage(OuterInput input) => _Chat.SendMessage(input);
         public void FindCategory(OuterInput input) => _Chat.FindCategory(input);
         public void SetCategory(OuterInput input) => _Chat.SetCategory(input);
         public void DeleteMessage(OuterInput input) => _Chat.DeleteMessage(input);
-        public void TimeOut(OuterInput input) => _Chat.TimeOut(input);
+        public async void TimeOut(OuterInput input) => await _Chat.TimeOut(input.Source, input.UserID);
         public void Ban(OuterInput input) => _Chat.Ban(input);
         public void Clip(OuterInput input) => _Chat.Clip(input);
+        #endregion
         #endregion
 
         protected override void Awake()

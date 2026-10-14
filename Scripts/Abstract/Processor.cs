@@ -3,8 +3,6 @@ using System.Threading.Tasks;
 
 using Core;
 
-using Unity.Entities;
-
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -27,7 +25,7 @@ namespace Integration
 
         [Header("Events")]
         [Space]
-        [SerializeField] int SubscriptionDelay = 60;
+        [SerializeField] protected int SubscriptionDelay = 60;
         [SerializeField] protected string[] Events;
 
         [Header("Socket Messages")]
@@ -55,7 +53,7 @@ namespace Integration
             Application.OpenURL($"{AuthURL}?response_type=token&client_id={AppID}&redirect_uri={RedirectURL}&{scope}");
         }
         public string GetSocketURL() => SocketURL;
-        public async void SubscribeToEvents(Platform platform)
+        public virtual async void SubscribeToEvents(Platform platform)
         {
             for (int e = 0; e < Events.Length; e++)
             {
@@ -63,6 +61,10 @@ namespace Integration
 
                 await Task.Delay(SubscriptionDelay);
             }
+        }
+        public virtual async Task ReleaseRewards(Platform platform)
+        {
+            await Task.Delay(SubscriptionDelay);
         }
 
         public async Task<string> Get(string uri, string bearer)
@@ -191,7 +193,7 @@ namespace Integration
         public abstract void OnOpen(Platform platform);
         public abstract void OnPing(Platform platform);
         public abstract void DetermineType(ref SocketMessage message, ref Platform platform);
-        public abstract void Invoke(SocketMessage message, EntityManager manager);
+        public abstract void Invoke(SocketMessage message);
         public abstract SocketMessage MessageFromJson(string data);
 
         public abstract Task<string> Connect(Platform platform);

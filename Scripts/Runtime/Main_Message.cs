@@ -1,10 +1,6 @@
-using Core;
-
 using Input;
 
 using UI;
-
-using Unity.Entities;
 
 using UnityEngine;
 
@@ -21,17 +17,17 @@ namespace Integration
         {
             base.Init(input);
 
-            var del = new OuterInput(input);
+            var del = input.Clone();
             del.Title = "Delete Message Button";
             DeleteButton.RemoveAllInputs();
             DeleteButton.AddInput(del);
 
-            var to = new OuterInput(input);
+            var to = input.Clone();
             to.Title = "Timeout Button";
             TimeoutButton.RemoveAllInputs();
             TimeoutButton.AddInput(to);
 
-            var ban = new OuterInput(input);
+            var ban = input.Clone();
             ban.Title = "Ban Button";
             BanButton.RemoveAllInputs();
             BanButton.AddInput(ban);

@@ -44,7 +44,7 @@ namespace Integration
                 break;
             }
         }
-        public override void Invoke(SocketMessage message, EntityManager manager)
+        public override void Invoke(SocketMessage message)
         {
             var mtw = message as SocketMessage_TW;
             switch (mtw.metadata.subscription_type)
@@ -56,7 +56,7 @@ namespace Integration
                     Source = "twitch",
                     Agent = mtw.payload.@event.user_name,
                 },
-                manager);
+                World.DefaultGameObjectInjectionWorld.EntityManager);
                 break;
                 case "channel.chat.message":
                 Sys.Add_M(new OuterInput
@@ -70,7 +70,7 @@ namespace Integration
                     UserID = mtw.payload.@event.chatter_user_id,
                     Badges = ExtractBadges(mtw.payload.@event.badges),
                 },
-                manager);
+                World.DefaultGameObjectInjectionWorld.EntityManager);
                 break;
                 case "channel.chat.message_delete":
                 Sys.Add_M(new OuterInput
@@ -79,7 +79,7 @@ namespace Integration
                     Source = "twitch",
                     ID = mtw.payload.@event.message_id,
                 },
-                manager);
+                World.DefaultGameObjectInjectionWorld.EntityManager);
                 break;
             }
         }
