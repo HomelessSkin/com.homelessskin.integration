@@ -326,6 +326,19 @@ namespace Integration
         public string profile_image_url;
     }
 
+
+    [Serializable]
+    public class ModerResponse
+    {
+        public Moder[] data;
+    }
+
+    [Serializable]
+    public class Moder
+    {
+        public string user_name;
+    }
+
     [Serializable]
     public class BadgesResponse
     {
