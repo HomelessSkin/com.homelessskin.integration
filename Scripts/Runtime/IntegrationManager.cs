@@ -277,8 +277,8 @@ namespace Integration
                 break;
             }
 
-            _Chat.MainMessenger.OnMessage(input);
-            _Chat.OBSMessenger.OnMessage(input);
+            _Chat.MainMessenger?.OnMessage(input);
+            _Chat.OBSMessenger?.OnMessage(input);
 
             _Chat.ResetLastMessage();
         }
