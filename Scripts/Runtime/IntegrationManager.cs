@@ -8,7 +8,6 @@ using Input;
 using UI;
 
 using UnityEngine;
-using UnityEngine.Profiling;
 
 namespace Integration
 {
@@ -301,19 +300,13 @@ namespace Integration
         }
         protected override void Update()
         {
-            Profiler.BeginSample("U");
             base.Update();
-            Profiler.EndSample();
 
             var dt = Time.deltaTime;
 
-            Profiler.BeginSample("C");
             _Chat.Update(dt);
-            Profiler.EndSample();
 
-            Profiler.BeginSample("S");
             StreamingSprites.UpdateAnimations(dt);
-            Profiler.EndSample();
         }
 
         #region TWITCH
